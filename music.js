@@ -5,7 +5,7 @@ const youtubedl = require("youtube-dl");
 class Song {
     constructor(url, fetched) {
         this.preloaded = false;
-        
+
         let request;
         if(!ytdl.validateURL(url)) {
             request = "ytsearch:" + url;                                          
@@ -26,8 +26,10 @@ class Song {
     }
 
     preload() {
-        this.stream = ytdl(this.url, {filter: 'audioonly'});
+        
+        this.stream = ytdl(this.url, {format: 'audioonly'});
         this.preloaded = true;
+
     }
 }
 
@@ -36,6 +38,32 @@ class Song {
     Turn this into a mysql database using JSON.stringify to convert object to text and then
     JSON.parse to convert it back to an object
 
+    if we do this we cannot store the preloaded streams, to combat this we will probably
+    have to preload only one and store the actual request as its raw url or search
+    query form
+
+    voice connections cannot be converted to json, but we can store voice channels 
+    as guild channel ids and then join later (storage of voice connection probably isn't 
+    even necessary)
+
+    the active song needs to stay loaded into memory, since its an active stream
+
+    breakdown ->
+
+
+    DATABASE
+
+        TABLE streams:
+            guild_id   guild_channel_id   song_queue
+
+    MEMORY
+
+        OBJECT active_streams
+            guild_id {
+                voice_connection
+                active_music_stream
+            }
+
 */
 
 let active_streams = {
@@ -43,7 +71,9 @@ let active_streams = {
         "active": null,
         "active_song": null,
         "vc": null,
-        "queue": [] //filled with song objects
+        "queue": [], //filled with song objects
+        "disconnect": null,
+        "last_msg": null
     }
 }
 
@@ -64,10 +94,13 @@ function play_next(guild, reason, msg) {
     }
     
     if(queue.length == 0) {
+        guild_account["last_channel"].send(":white_check_mark: Queue Finished");
         return;
     }
 
     create_and_play(queue[0], guild, guild_account["vc"]);
+
+    guild_account["last_channel"].send(`**Now playing** :musical_note: \`${guild_account["active_song"].info.title}\` :musical_note:`);
 
     guild_account["queue"] = queue.slice(1, queue.length);
 }
@@ -85,7 +118,9 @@ function create_guild_account(guild, connection) {
         "active": null,
         "active_song": null,
         "vc": connection,
-        "queue": []
+        "queue": [],
+        "disconnect": null,
+        "last_channel": null
     };
 
     return active_streams[guild.id];
@@ -93,10 +128,14 @@ function create_guild_account(guild, connection) {
 
 function create_and_play(song, guild, connection) {
 
+    // use stream if loaded or post-pone if not
     if(song.preloaded) {
         stream = song.stream;
     } else {
-        stream = ytdl(song.url, {filter: 'audioonly'});
+        setTimeout(() => {
+            create_and_play(song, guild, connection);
+        }, 100);
+        return;
     }
 
     let streamOptions = {seek: 0, volume: 1};
@@ -105,13 +144,28 @@ function create_and_play(song, guild, connection) {
 
     if(guild_account["active"] == null) {
 
+        if(guild_account["disconnect"] != null) {
+            clearTimeout(guild_account["disconnect"]);
+        }
+        
         guild_account["active"] = connection.playStream(stream, streamOptions);
+
         guild_account["active"].on('error', e => {
             console.log(e);
         });
+
         guild_account["active"].on('end', reason => {
+            guild_account["disconnect"] = setTimeout(() => {
+                guild_account["vc"].disconnect();
+                guild_account["active"] = null;
+                guild_account["active_song"] = null;
+                guild_account["last_channel"].send(":x: Disconnected due to inactivity");
+            }, 300 * 1000);
+            
             play_next(guild, reason);
+
         });
+
         guild_account["active_song"] = song;
 
     } 
@@ -127,22 +181,29 @@ function add_to_queue(song, msg, connection) {
 
     let embed = new Discord.RichEmbed();
     embed.setThumbnail(song.info.thumbnail);
-    embed.addField("Title", song.info.title);
+    embed.setTitle(`**${song.info.title}**`);
     embed.addField("Uploader", song.info.uploader);
+    embed.addField("Length", song.info.duration);
+    embed.setURL("https://www.youtube.com/watch?v=" + song.info.id);
 
     if(guild_account["active"] == null) {
+        song.preload();
         create_and_play(song, msg.guild, connection);
 
         embed.setAuthor("Now Playing", msg.author.avatarURL);
+        embed.addField("Position in queue", "Playing now");
         
     } else {
         guild_account["queue"].push(song);
         song.preload();
 
         embed.setAuthor("Added to Queue", msg.author.avatarURL);
+        embed.addField("Position in queue", guild_account["queue"].length);
     }
 
     msg.channel.send(embed);
+
+    guild_account["last_channel"] = msg.channel;
 
 }
 
@@ -228,6 +289,8 @@ function skip(msg, bot) {
     }
 
     play_next(msg.guild, "skip", msg);
+
+    guild_account["last_channel"] = msg.channel;
 }
 
 function queue(msg, bot) {
@@ -259,6 +322,8 @@ function queue(msg, bot) {
     }
 
     msg.channel.send(embed);
+
+    guild_account["last_channel"] = msg.channel;
 }
 
 function voteskip(msg, bot) {
@@ -285,6 +350,8 @@ function stop(msg, bot) {
         guild_account["active"].end("stop");
         guild_account["vc"].disconnect();
         msg.channel.send(":octagonal_sign: Queue cleared and disconnected from voice channel");
+
+        guild_account["last_channel"] = msg.channel;
     }
 }
 
@@ -294,6 +361,8 @@ function clear(msg, bot) {
         let guild_account = get_guild_account(msg.guild);
         guild_account["queue"] = [];
         msg.channel.send(":white_check_mark: Queue cleared");
+
+        guild_account["last_channel"] = msg.channel;
     }
 }
 
