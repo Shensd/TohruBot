@@ -2,9 +2,14 @@ const Discord = require('discord.js');
 const ytdl = require("ytdl-core");
 const youtubedl = require("youtube-dl");
 
+const PLAYER_DEBUG_LOGGING = true;
+
 class Song {
-    constructor(url, fetched) {
+    constructor(url, fetched, dead) {
         this.preloaded = false;
+        this.preloading = false;
+
+        this.dead = dead;
 
         let request;
         if(!ytdl.validateURL(url)) {
@@ -21,15 +26,34 @@ class Song {
         search.on('info', (info) => {
             this.info = info;
             this.url = info.id;
+
             fetched(this);
         }); 
+        search.on('error', (e) => {
+            console.log(e);
+        });
     }
 
     preload() {
-        
-        this.stream = ytdl(this.url, {format: 'audioonly'});
-        this.preloaded = true;
 
+        if(this.preloaded || this.preloading) return;
+
+        this.preloading = true;
+
+        this.stream = ytdl(this.url, {format: 'audioonly'});
+        this.stream.on("readable", () => {
+            this.preloaded = true;
+            this.preloading = false;
+            if(PLAYER_DEBUG_LOGGING) console.log(`${this.info.title} NOW READABLE`);
+        });
+        this.stream.on("end", () => {
+            if(this.dead) {
+                this.dead();
+            }
+        });
+        this.stream.on("error", (e) => {
+            console.log(e);
+        });
     }
 }
 
@@ -77,7 +101,11 @@ let active_streams = {
     }
 }
 
-function play_next(guild, reason, msg) {
+function play_next(guild, reason) {
+    if(!reason) {
+        console.log("UNDEFINED PLAY REASON");
+        return;
+    } 
     if(reason === "self called") return;
 
     if(!guild_account_exists(guild)) return;
@@ -86,19 +114,25 @@ function play_next(guild, reason, msg) {
 
     let queue = guild_account["queue"];
 
-    guild_account["active"].end("self called");
+    if(guild_account["active"].end) {
+        guild_account["active"].end("self called");
+    }
     guild_account["active"] = null;
 
     if(reason === "skip") {
-        msg.channel.send("Song skipped :arrow_right:");
+        guild_account["last_channel"].send("Song skipped :arrow_right:");
     }
     
-    if(queue.length == 0) {
+    if(queue.length == 0 && !(reason === "stop")) {
         guild_account["last_channel"].send(":white_check_mark: Queue Finished");
         return;
     }
 
-    create_and_play(queue[0], guild, guild_account["vc"]);
+    if(reason === "stop") {
+        return;
+    }
+
+    play_buffer(queue[0], guild, guild_account["vc"]);
 
     guild_account["last_channel"].send(`**Now playing** :musical_note: \`${guild_account["active_song"].info.title}\` :musical_note:`);
 
@@ -126,49 +160,72 @@ function create_guild_account(guild, connection) {
     return active_streams[guild.id];
 }
 
-function create_and_play(song, guild, connection) {
+function play_buffer(song, guild, connection) {
+    
+    let guild_account = get_guild_account(guild);
 
-    // use stream if loaded or post-pone if not
+    // prevent double playing of songs if current isn't loaded yet
+    if(guild_account["active"] == null) {
+        if(PLAYER_DEBUG_LOGGING) console.log("NO ACTIVE STREAM, FAKING");
+        guild_account["active"] = 1;
+    }
+
+    // check if song is ready, create and play if it is or postpone if it isnt
+    if(PLAYER_DEBUG_LOGGING) console.log(`PRELOADED ${song.preloaded}`);
     if(song.preloaded) {
-        stream = song.stream;
+        create_and_play(song, guild, connection);
     } else {
+        song.preload();
         setTimeout(() => {
-            create_and_play(song, guild, connection);
+            play_buffer(song, guild, connection);
         }, 100);
         return;
     }
+}
+
+function create_and_play(song, guild, connection) {
+    let guild_account = get_guild_account(guild);
+
+    let stream = song.stream;
 
     let streamOptions = {seek: 0, volume: 1};
 
-    guild_account = get_guild_account(guild);
+    // clear auto disconnect since we are now active again
+    if(guild_account["disconnect"] != null) {
+        clearTimeout(guild_account["disconnect"]);
+        guild_account["disconnect"] = null;
+    }
 
-    if(guild_account["active"] == null) {
+    guild_account["active_song"] = song; 
+    guild_account["active"] = connection.playStream(stream, streamOptions);
 
-        if(guild_account["disconnect"] != null) {
-            clearTimeout(guild_account["disconnect"]);
-        }
-        
-        guild_account["active"] = connection.playStream(stream, streamOptions);
+    if(PLAYER_DEBUG_LOGGING) console.log(`PLAYING ${guild_account["active_song"].info.title}`);
 
-        guild_account["active"].on('error', e => {
-            console.log(e);
-        });
+    guild_account["active"].on('error', e => {
+        console.log(e);
+    });
+    guild_account["active"].on('speaking', e => {
+        if(PLAYER_DEBUG_LOGGING) console.log(`SPEAKING ${e}`);
+    });
 
-        guild_account["active"].on('end', reason => {
-            guild_account["disconnect"] = setTimeout(() => {
+    guild_account["active"].on('end', reason => {
+        if(PLAYER_DEBUG_LOGGING) console.log(`ENDED ${guild_account["active_song"].info.title}`);
+        guild_account["disconnect"] = setTimeout(() => {
+
+            if(guild_account["vc"]) {
                 guild_account["vc"].disconnect();
-                guild_account["active"] = null;
-                guild_account["active_song"] = null;
-                guild_account["last_channel"].send(":x: Disconnected due to inactivity");
-            }, 300 * 1000);
-            
-            play_next(guild, reason);
+                guild_account["vc"] = null;
+            }
 
-        });
+            guild_account["active"] = null;
+            guild_account["disconnect"] = null;
+            guild_account["last_channel"].send(":x: Disconnected due to inactivity");
+        }, 300 * 1000);
+        
+        if(PLAYER_DEBUG_LOGGING) console.log(`REASON ${reason}`);
+        play_next(guild, reason);
 
-        guild_account["active_song"] = song;
-
-    } 
+    });
 }
 
 function add_to_queue(song, msg, connection) {
@@ -187,8 +244,7 @@ function add_to_queue(song, msg, connection) {
     embed.setURL("https://www.youtube.com/watch?v=" + song.info.id);
 
     if(guild_account["active"] == null) {
-        song.preload();
-        create_and_play(song, msg.guild, connection);
+        play_buffer(song, msg.guild, connection);
 
         embed.setAuthor("Now Playing", msg.author.avatarURL);
         embed.addField("Position in queue", "Playing now");
@@ -208,14 +264,21 @@ function add_to_queue(song, msg, connection) {
 }
 
 function play(msg, bot) {
-    let video_desc = msg.content.split(" ").slice(1, msg.content.split(" ").length).join(" ");
-
     if(!msg.guild) return;
+
+    let video_desc = msg.content.split(" ").slice(1, msg.content.split(" ").length).join(" ");
 
     if(video_desc.length <= 0) {
         msg.channel.send(":bread: No url or search query provided");
         return;
     }
+
+    if(video_desc.length > 200) {
+        msg.channel.send(":bread: Search query longer than 200 characters");
+        return;
+    }
+
+    video_desc.replace("\n", "");
 
     let vc = msg.member.voiceChannel;
     let me_vc = msg.guild.me.voiceChannel;
@@ -246,7 +309,7 @@ function play(msg, bot) {
                 });
 
             })
-            .catch( (e) => {
+            .catch((e) => {
                 console.log(e);
             });
     } else {
@@ -288,22 +351,30 @@ function skip(msg, bot) {
         return;
     }
 
-    play_next(msg.guild, "skip", msg);
+    guild_account["active"].end("skip");
 
     guild_account["last_channel"] = msg.channel;
 }
 
-function queue(msg, bot) {
+function queue(msg, bot, tries) {
     if(!msg.guild) return;
 
-    if(!guild_account_exists(msg.guild)) {
+    if(!guild_account_exists(msg.guild) || tries > 10) {
         msg.channel.send(":x: There are no songs in the queue.");
         return;
     }
 
     let guild_account = get_guild_account(msg.guild);
-    let queue = guild_account["queue"];
 
+    if(guild_account["active_song"] == null) {
+        setTimeout(() => {
+            if(tries == null) tries = 0;
+            this.queue(msg, bot, tries+1);
+        }, 100);
+        return;
+    } 
+
+    let queue = guild_account["queue"];
     let embed = new Discord.RichEmbed();
 
     embed.addField("Currently Playing", guild_account["active_song"].info.title);
@@ -312,10 +383,10 @@ function queue(msg, bot) {
     if(queue.length > 0) {
         let message = "";
 
-        for(let i = 0; i < ((queue > 5) ? 5 : queue.length); i++) {
+        for(let i = 0; i < ((queue.length > 5) ? 5 : queue.length); i++) {
             message += "" + (i+1) + ". " + queue[i].info.title + "\n";
         }
-        
+        message += "...";
         embed.addField("Queue", message);
     } else {
         embed.addField("Queue", "No videos in queue");
@@ -343,7 +414,6 @@ function voteskip(msg, bot) {
 }
 
 function stop(msg, bot) {
-    if(!msg.guild) return;
     if(guild_account_exists(msg.guild)) {
         let guild_account = get_guild_account(msg.guild);
         guild_account["queue"] = [];
@@ -352,6 +422,14 @@ function stop(msg, bot) {
         msg.channel.send(":octagonal_sign: Queue cleared and disconnected from voice channel");
 
         guild_account["last_channel"] = msg.channel;
+    } else if (msg.guild.me.voiceChannel != null) {
+        if(msg.guild.me.voiceChannel) {
+            msg.guild.me.voiceChannel.join()
+                .then((c) => {
+                    c.disconnect();
+                });
+        }
+        msg.channel.send(":octagonal_sign: Queue cleared and disconnected from voice channel");
     }
 }
 
@@ -366,9 +444,17 @@ function clear(msg, bot) {
     }
 }
 
+function link(msg, bot) {
+    if(!msg.guild) return;
+    if(guild_account_exists(msg.guild)) {
+        /* do stuff */    
+    }
+}
+
 module.exports.play = play;
 module.exports.skip = skip;
 module.exports.queue = queue;
 module.exports.voteskip = voteskip;
 module.exports.stop = stop;
 module.exports.clear = clear;
+module.exports.link = link;

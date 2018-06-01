@@ -184,6 +184,18 @@ var commands = {
             music.clear(msg, bot);
             
         }
+    },
+    "link": {
+        name: "link",
+        description: "provides a link to the currently playing song",
+        category: "music",
+        usage: "$link",
+        admin: false,
+        process: function(msg, bot) {
+
+            music.link(msg, bot);
+            
+        }
     }
     
     /*
