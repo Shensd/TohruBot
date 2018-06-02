@@ -14,9 +14,12 @@
     "youtube-dl": "^1.12.2",
     "ytdl-core": "^0.20.4"
   },
-  "devDependencies": {},
+  "devDependencies": {
+    "nodemon": "^1.17.5"
+  },
   "scripts": {
-    "test": "node bot.js --debug"
+    "test": "node bot.js --debug",
+    "start": "nodemon bot.js"
   },
   "repository": {
     "type": "git",

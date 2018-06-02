@@ -67,7 +67,7 @@ if(modes.help.activated) {
         str += "     " + obj.description + "\n";
     }
     console.log(str);
-    process.exit();
+    process.exit(0);
 }
 
 
@@ -83,6 +83,7 @@ bot.on('ready', () => {
         .catch(console.error);
 
     console.log(conf["username"] + " is ready."); 
+    bot.generateInvite('36703232').then(console.log)
 
 });
 
