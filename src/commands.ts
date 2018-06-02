@@ -14,13 +14,13 @@ import * as youtubedl from 'youtube-dl'
 import { Message, Client } from 'discord.js';
 //const youtubedl = require("youtube-dl");
 
-import {command_clear as clear,
-        command_play as play,
-        command_skip as skip,
-        command_stop as stop,
-        command_link as link,
-        command_queue as queue,
-        command_voteskip as voteskip } from './music'
+import {commandClear as clear,
+        commandPlay as play,
+        commandSkip as skip,
+        commandStop as stop,
+        commandLink as link,
+        commandQueue as queue,
+        commandVoteSkip as voteskip } from './music'
 
 function img_reply(msg: Message, img: string) {
     msg.reply("", {files:[root_img + pics[img]]});
@@ -60,19 +60,19 @@ export const commands: {[key: string]: ICommand} = {
                 return;
             }
             let str = "```";
-            let longest_name = 0;
+            let longestName = 0;
             for(const k in commands) {
                 let obj = commands[k];
-                if(obj.name.length > longest_name) longest_name = obj.name.length;
+                if(obj.name.length > longestName) longestName = obj.name.length;
             }
             for(const k in commands) {
-                let filler_str = "";
+                let filterStr = "";
                 let obj = commands[k];
-                let filler_len = (longest_name + 1) - obj.name.length;
-                for(let i = 0; i < filler_len; i++) {
-                    filler_str += "-";
+                let filterLen = (longestName + 1) - obj.name.length;
+                for(let i = 0; i < filterLen; i++) {
+                    filterStr += "-";
                 }
-                str += obj.name + " " + filler_str + " " + obj.description + "\n";
+                str += obj.name + " " + filterStr + " " + obj.description + "\n";
             }
             str = str.substring(0, str.length - 2);
             str += "```\n";
