@@ -1,12 +1,13 @@
+// @flow
 const Discord     = require('discord.js');
 const commands    = require('./commands.js');
 
-const auth        = require('./res/auth/auth.json');
-const conf        = require('./config/config.json');
-const pics        = require('./res/json/pics.json');
+const auth        = require('../res/auth/auth.json');
+const conf        = require('../config/config.json');
+const pics        = require('../res/json/pics.json');
 
-const root_img    = './res/img/';
-const root_config = "./config/"
+const root_img    = '../res/img/';
+const root_config = "../config/"
 
 const bot = new Discord.Client();
 
@@ -83,7 +84,10 @@ bot.on('ready', () => {
         .catch(console.error);
 
     console.log(conf["username"] + " is ready."); 
-    bot.generateInvite('36703232').then(console.log)
+
+    console.log('Invite Link:');
+    // the permissions required by the bot to function
+    bot.generateInvite('36703232').then(console.log);
 
 });
 

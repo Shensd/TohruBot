@@ -1,9 +1,10 @@
+//@flow
 const fs = require('fs');
 const Discord = require('discord.js');
 
-const root_img = "./res/img/";
+const root_img = "../res/img/";
 
-const file_pics = './res/json/pics.json';
+const file_pics = '../res/json/pics.json';
 const pics = require(file_pics);
 
 const ytdl = require("ytdl-core");
