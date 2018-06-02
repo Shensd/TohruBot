@@ -71,7 +71,7 @@ class GuildMusicController {
     }
 
     get voice_connection() {
-        this.guild.voiceConnction;
+        this.guild.voiceConnection;
     }
 
     clear_disconnect_timer() {
@@ -84,15 +84,15 @@ class GuildMusicController {
     start_disconnect_timer() {
         this.disconnect_timer = setTimeout(() => {
 
-            if(this.voice_conneciton) {
-                this.voice_conneciton.disconnect();
-                this.voice_conneciton = null;
+            if(this.voice_connection) {
+                this.voice_connection.disconnect();
+                this.last_channel.send(":x: Disconnected due to inactivity");
             }
 
             this.active_stream = null;
             this.disconnect_timer = null;
-            this.last_channel.send(":x: Disconnected due to inactivity");
-        }, 300 * 1000);
+
+        }, 1 * 1000);
     }
 
     clear_queue() {
