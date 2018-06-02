@@ -16,15 +16,8 @@
     "youtube-dl": "^1.12.2",
     "ytdl-core": "^0.20.4"
   },
-  "devDependencies": {
-    "flow-bin": "^0.73.0",
-    "flow-remove-types": "^1.2.3"
-  },
   "scripts": {
-    "test": "node bot.js --debug",
-    "build": "flow-remove-types ./ -d lib/",
-    "prepublish": "npm run build",
-    "flow": "flow"
+    "test": "node bot.js --debug"
   },
   "repository": {
     "type": "git",
