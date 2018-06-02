@@ -11,7 +11,7 @@ import * as ytdl from 'ytdl-core'
 
 // const ytdl = require("ytdl-core");
 import * as youtubedl from 'youtube-dl'
-import { Message, Client } from 'discord.js';
+import { Message, Client, OAuth2Application } from 'discord.js';
 //const youtubedl = require("youtube-dl");
 
 import {command_clear as clear,
@@ -21,19 +21,26 @@ import {command_clear as clear,
         command_link as link,
         command_queue as queue,
         command_voteskip as voteskip } from './music'
+import { Utils } from './utils';
 
 function img_reply(msg: Message, img: string) {
     msg.reply("", {files:[root_img + pics[img]]});
 }
 
+export interface ICommandParams {
+    msg: Message;
+    bot: Client;
+    args: string[];
+}
+
 // defining the structure of our commands
-interface ICommand {
+export interface ICommand {
     name: string;
     description: string;
     category: string;
     usage: string;
     admin: boolean;
-    process(msg: Message, bot: Client): void;
+    process(params: ICommandParams): any;
 }
 
 export const commands: {[key: string]: ICommand} = {
@@ -43,9 +50,9 @@ export const commands: {[key: string]: ICommand} = {
         category: "utility",
         usage: "$help [commandname]",
         admin: false,
-        process: function(msg: Message, bot: Client) {
-            let args = msg.content.split(" ").slice(1, msg.content.split(" ").length);
-            if(msg.content.split(" ").length > 1) {
+        process: function(params: ICommandParams) {
+            let args = params.args;
+            if(args.length) {
                 if(commands[args.join(" ").toLowerCase()]) {
                     let str = "```";
                     let obj = commands[args.join(" ").toLowerCase()];
@@ -53,9 +60,9 @@ export const commands: {[key: string]: ICommand} = {
                     str += "Description: " + obj.description + "\n";
                     str += "Usage      : " + obj.usage + "\n";
                     str += "```";
-                    msg.reply(str);
+                    params.msg.reply(str);
                 } else {
-                    msg.reply("Command not found.");
+                    params.msg.reply("Command not found.");
                 }
                 return;
             }
@@ -79,8 +86,8 @@ export const commands: {[key: string]: ICommand} = {
             str += "Admin commands require the `Bot Commander` role\n";
             str += "Use `$help commandname` for more information";
             
-            msg.author.send(str);
-            msg.reply("I have sent you a list of my commands!");
+            params.msg.author.send(str);
+            params.msg.reply("I have sent you a list of my commands!");
         }
     },
     "ping" : {
@@ -89,8 +96,8 @@ export const commands: {[key: string]: ICommand} = {
         category: "fun",
         usage: "$ping",
         admin: false,
-        process: function(msg, bot) {
-            msg.reply('Pong!');
+        process: function(params: ICommandParams) {
+            params.msg.reply('Pong!');
         }
     },
     "echo": {
@@ -99,9 +106,9 @@ export const commands: {[key: string]: ICommand} = {
         category: "fun",
         usage: "$echo what you want to hear here",
         admin: false,
-        process: function(msg, bot) {
-            let content = msg.content.split(" ").slice(1, msg.content.split(" ").length).join(" ");
-            msg.reply(content);
+        process: function(params: ICommandParams) {
+            let content = params.args.join(' ');
+            params.msg.reply(content);
         }
     },
     "thonk": {
@@ -110,8 +117,8 @@ export const commands: {[key: string]: ICommand} = {
         category: "fun",
         usage: "$thonk",
         admin: false,
-        process: function(msg, bot) {
-            msg.reply(
+        process: function(params: ICommandParams) {
+            params.msg.reply(
                 "", 
                 {
                     files: [
@@ -119,7 +126,7 @@ export const commands: {[key: string]: ICommand} = {
                     ]
                 }
             );
-            msg.delete();
+            params.msg.delete();
 
         }
     },
@@ -129,9 +136,9 @@ export const commands: {[key: string]: ICommand} = {
         category: "music",
         usage: "play [url or keyword search here]",
         admin: false,
-        process: function(msg, bot) {
+        process: function(params: ICommandParams) {
 
-            play(msg, bot);
+            play(params.msg, params.bot);
 
         }
     },
@@ -148,9 +155,9 @@ export const commands: {[key: string]: ICommand} = {
         category: "music",
         usage: "$skip",
         admin: true,
-        process: function(msg, bot) {
+        process: function(params: ICommandParams) {
 
-            skip(msg, bot);
+            skip(params.msg, params.bot);
 
         }
     },
@@ -160,8 +167,8 @@ export const commands: {[key: string]: ICommand} = {
         category: "music",
         usage: "$queue",
         admin: false,
-        process: function(msg, bot) {
-            queue(msg, bot);
+        process: function(params: ICommandParams) {
+            queue(params.msg, params.bot);
 
         }
     },
@@ -185,9 +192,9 @@ export const commands: {[key: string]: ICommand} = {
         category: "music",
         usage: "$stop",
         admin: true,
-        process: function(msg, bot) {
+        process: function(params: ICommandParams) {
 
-            stop(msg, bot);
+            stop(params.msg, params.bot);
 
         }
     },
@@ -197,9 +204,9 @@ export const commands: {[key: string]: ICommand} = {
         category: "music",
         usage: "$clear",
         admin: true,
-        process: function(msg, bot) {
+        process: function(params: ICommandParams) {
 
-            clear(msg, bot);
+            clear(params.msg, params.bot);
             
         }
     },
@@ -209,20 +216,48 @@ export const commands: {[key: string]: ICommand} = {
         category: "music",
         usage: "$link",
         admin: false,
-        process: function(msg, bot) {
-            link(msg, bot);
+        process: function(params: ICommandParams) {
+            link(params.msg, params.bot);
             
         }
-    }
+    },
     
-    /*
-    "": {
-        name: "",
-        description: "",
-        usage: "",
-        process: function(msg, bot) {
-
+    "changename": {
+        name: "changename",
+        description: "Changes the bots name",
+        category: "bot",
+        usage: "$changename [name]",
+        admin: true,
+        process: async function(params: ICommandParams) {
+            const isOwner = await Utils.isBotOwner(params.bot, params.msg.member);
+            if (!isOwner){
+                return void params.msg.reply('You must be the bot owner to run this command.');
+            }
+            if (!params.args.length){
+                return void params.msg.reply('Could not find a name in your command')
+            }
+            const name = params.args.join(' ');
+            params.bot.user.setUsername(name);
+            params.msg.reply(`Changed my name to ${name}`);
+        }
+    },
+    "changeavatar": {
+        name: "changeavatar",
+        description: "Changes the bots avatar",
+        category: "bot",
+        usage: "$changeavatar [avatar]",
+        admin: true,
+        process: async function(params: ICommandParams) {
+            const isOwner = await Utils.isBotOwner(params.bot, params.msg.member);
+            if (!isOwner){
+                return void params.msg.reply('You must be the bot owner to run this command.');
+            }
+            if (!params.args.length){
+                return void params.msg.reply('Could not find a link to a picture in your command.')
+            }
+            const avatar = params.args.shift()!;
+            params.bot.user.setAvatar(avatar);
+            params.msg.reply(`Got myself a new avatar`);
         }
     }
-    */
 }

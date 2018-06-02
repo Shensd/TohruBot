@@ -1,5 +1,4 @@
-const Discord     = require('discord.js');
-import {commands} from './commands'
+import * as Discord from 'discord.js'
 
 const auth        = require('../res/auth/auth.json');
 const conf        = require('../config/config.json');
@@ -8,6 +7,7 @@ const pics        = require('../res/json/pics.json');
 const root_img    = '../res/img/';
 const root_config = "../config/"
 
+import {commands, ICommandParams} from './commands'
 import {Client, Message}  from 'discord.js'
 import { Utils } from './utils';
 
@@ -101,8 +101,9 @@ bot.on('ready', () => {
 });
 
 bot.on('message', (msg: Message) => {
-    if(msg.author == bot.user) return;
-    if(msg.content[0] != "$") return;
+    if(msg.author == bot.user || msg.content[0] != "$"){
+        return;
+    }
     
     let [cmd, args] = Utils.getArgs(msg);
     
@@ -110,20 +111,23 @@ bot.on('message', (msg: Message) => {
         console.log("Command was recieved but lock mode is enabled");
         return;
     }
-
+    
     if(!commands[cmd]) {
         // command does not exist
         return;
     }
 
-    if(!commands[cmd].admin 
-        || !msg.guild
+    if((commands[cmd].admin && msg.member.hasPermission('ADMINISTRATOR'))  
+        || !msg.guild 
         || msg.member.roles.exists("name", "Bot Commander")) {
-        return void commands[cmd].process(msg, bot);
-    }
 
-    else if (commands[cmd].admin && msg.member.hasPermission('ADMINISTRATOR')){
+        const params: ICommandParams  = {
+            bot: bot,
+            msg: msg,
+            args: args
+        }
         
+        return void commands[cmd].process(params);
     }
 
     msg.channel.send(":x: Invalid permissions");
