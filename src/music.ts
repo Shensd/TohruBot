@@ -3,6 +3,7 @@ import * as ytdl from 'ytdl-core'
 import * as youtubedl from 'youtube-dl'
 import { Readable } from 'stream';
 import { Guild, VoiceChannel, TextChannel, Message, StreamDispatcher, VoiceConnection, Client } from 'discord.js';
+import { MusicEmbeds } from './embeds';
 
 // set this to true to get all the delicious voice debug info in console
 const PLAYER_DEBUG_LOGGING = false;
@@ -18,7 +19,7 @@ export class Song {
     constructor(public url: string, info_fetched: (song: Song) => any) {
         this.loaded = false;
         this.loading = false;
-
+        
         let request;
         if(!ytdl.validateURL(url)) {
             request = `ytsearch:${url}`;
@@ -39,7 +40,7 @@ export class Song {
 
             info_fetched(this);
         }); 
-        search.on('error', (e) => {
+        search.on('error', (e) => { 
             console.log(e);
         });
     }
@@ -63,7 +64,7 @@ export class Song {
     }
 }
 
-class GuildMusicController {
+export class GuildMusicController {
     guild: Guild;
     disconnectTimer?: NodeJS.Timer;
     lastChannel?: TextChannel;
@@ -78,8 +79,6 @@ class GuildMusicController {
         this.disconnectTimer = undefined;
         this.lastChannel     = undefined;
     }
-
-    constructor(public guild: Guild) {}
 
     get hasActiveStream() {
         return !!(this.activeStream);
@@ -213,13 +212,7 @@ function addToQueue(song: Song, msg: Message) {
 
     let guildAccount: GuildMusicController = getGuildAccount(msg.guild);
 
-    let embed: RichEmbed = new Discord.RichEmbed();
-    embed.setThumbnail(song.info.thumbnail);
-    embed.setTitle(`**${song.info.title}**`);
-    embed.addField("Uploader", song.info.uploader);
-    embed.addField("Length", song.info.duration);
-    embed.setURL(`https://www.youtube.com/watch?v=${song.info.id}`);
-
+    let embed = MusicEmbeds.queueEmbed(guildAccount);
 
     // instant play if there is no song playing, add to queue if there is,
     // modify message to fit
@@ -535,5 +528,27 @@ export function commandLink(msg: Message, bot: Client, tries?: number){
     } else {
         msg.channel.send(":x: Nothing currently playing");
     }
-    
+}
+
+export function commandSearch(msg: Message, bot: Client, url: string){
+    let request;
+    if(!ytdl.validateURL(url)) {
+        request = `ytsearch:${url}`;
+    } else {
+        request = url;
+    }
+
+    //@ts-ignore
+    let search = youtubedl(
+        request,
+        ["--skip-download"]
+        {}
+    );
+
+    search.on('info', (info: any) => {
+        console.log(info);
+    }); 
+    search.on('error', (e) => {
+        console.log(e);
+    });
 }
