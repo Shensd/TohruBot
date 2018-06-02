@@ -312,7 +312,7 @@ function play_stream(song: Song, guild: Guild) {
 
 /* USER COMMANDS */
 
-function command_play(msg: Message, bot: Client) {
+export function command_play(msg: Message, bot: Client) {
     // refuse if dm 
     if(!msg.guild) return;
 
@@ -376,7 +376,7 @@ function command_play(msg: Message, bot: Client) {
     }
 }
 
-function command_skip(msg: Message, bot: Client) {
+export function command_skip(msg: Message, bot: Client) {
     // refuse if dm 
     if(!msg.guild) return;
 
@@ -418,13 +418,13 @@ function command_skip(msg: Message, bot: Client) {
     guild_account.last_channel = <TextChannel> msg.channel;
 }
 
-function command_queue(msg: Message, bot: Client, tries: number) {
+export function command_queue(msg: Message, bot: Client, tries?: number) {
     // refuse if dm 
     if(!msg.guild) return;
 
     // if there is no guild account, or we have reached the max 
     // amount of retries, empty queue
-    if(!guild_account_exists(msg.guild) || tries > 10) {
+    if(!guild_account_exists(msg.guild) || (tries && tries > 10)) {
         msg.channel.send(":x: There are no songs in the queue.");
         return;
     }
@@ -465,7 +465,7 @@ function command_queue(msg: Message, bot: Client, tries: number) {
     guild_account.last_channel = <TextChannel> msg.channel;
 }
 
-function command_voteskip(msg: Message, bot: Client) {
+export function command_voteskip(msg: Message, bot: Client) {
     // refuse if dm 
     if(!msg.guild) return;
     /*
@@ -481,7 +481,7 @@ function command_voteskip(msg: Message, bot: Client) {
     */
 }
 
-function command_stop(msg: Message, bot: Client) {
+export function command_stop(msg: Message, bot: Client) {
     // refuse if dm 
     if(!msg.guild) return;
     if(guild_account_exists(msg.guild)) {
@@ -503,7 +503,7 @@ function command_stop(msg: Message, bot: Client) {
     }
 }
 
-function command_clear(msg: Message, bot: Client) {
+export function command_clear(msg: Message, bot: Client) {
     // refuse if dm 
     if(!msg.guild) return;
 
@@ -516,7 +516,7 @@ function command_clear(msg: Message, bot: Client) {
     }
 }
 
-function command_link(msg: Message, bot: Client, tries: number) {
+export function command_link(msg: Message, bot: Client, tries?: number){
     if(!msg.guild) return;
 
     // nothing playing if there is no guild account or we have reached max retries

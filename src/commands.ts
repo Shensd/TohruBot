@@ -14,8 +14,13 @@ import * as youtubedl from 'youtube-dl'
 import { Message, Client } from 'discord.js';
 //const youtubedl = require("youtube-dl");
 
-const music = require("./music.js")
-
+import {command_clear as clear,
+        command_play as play,
+        command_skip as skip,
+        command_stop as stop,
+        command_link as link,
+        command_queue as queue,
+        command_voteskip as voteskip } from './music'
 
 function img_reply(msg: Message, img: string) {
     msg.reply("", {files:[root_img + pics[img]]});
@@ -126,7 +131,7 @@ var commands: {[key: string]: ICommand} = {
         admin: false,
         process: function(msg, bot) {
 
-            music.play(msg, bot);
+            play(msg, bot);
 
         }
     },
@@ -145,7 +150,7 @@ var commands: {[key: string]: ICommand} = {
         admin: true,
         process: function(msg, bot) {
 
-            music.skip(msg, bot);
+            skip(msg, bot);
 
         }
     },
@@ -156,8 +161,7 @@ var commands: {[key: string]: ICommand} = {
         usage: "$queue",
         admin: false,
         process: function(msg, bot) {
-
-            music.queue(msg, bot);
+            queue(msg, bot);
 
         }
     },
@@ -183,7 +187,7 @@ var commands: {[key: string]: ICommand} = {
         admin: true,
         process: function(msg, bot) {
 
-            music.stop(msg, bot);
+            stop(msg, bot);
 
         }
     },
@@ -195,7 +199,7 @@ var commands: {[key: string]: ICommand} = {
         admin: true,
         process: function(msg, bot) {
 
-            music.clear(msg, bot);
+            clear(msg, bot);
             
         }
     },
@@ -206,8 +210,7 @@ var commands: {[key: string]: ICommand} = {
         usage: "$link",
         admin: false,
         process: function(msg, bot) {
-
-            music.link(msg, bot);
+            link(msg, bot);
             
         }
     }
