@@ -428,7 +428,7 @@ export function commandQueue(msg: Message, bot: Client, tries?: number) {
         msg.channel.send(":x: There are no songs in the queue.");
         return;
     }
-
+    
     let guildAccount = getGuildAccount(msg.guild);
 
     // if there is no active song postpone and retry (song 
