@@ -20,7 +20,8 @@ import {commandClear as clear,
         commandStop as stop,
         commandLink as link,
         commandQueue as queue,
-        commandVoteSkip as voteskip } from './music'
+        commandVoteSkip as voteskip,
+        commandSearch as search } from './music'
 import { Utils } from './utils';
 
 function img_reply(msg: Message, img: string) {
@@ -228,6 +229,16 @@ export const commands: {[key: string]: ICommand} = {
         process: function(params: ICommandParams) {
             link(params.msg, params.bot);
             
+        }
+    },
+    "search": {
+        name: "search",
+        description: "Searches for a song",
+        category: "music",
+        usage: "$search",
+        admin: false,
+        process: function(params: ICommandParams) {
+            search(params.msg, params.bot, params.args.join(' '))
         }
     },
     
