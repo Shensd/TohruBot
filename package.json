@@ -2,14 +2,16 @@
   "name": "tohru-bot",
   "version": "1.0.0",
   "description": "Main package",
-  "main": "bot.js",
+  "main": "lib/bot.js",
   "dependencies": {
     "bufferutil": "^3.0.5",
     "discord.js": "^11.3.2",
+    "erlpack": "^0.1.2",
     "graceful-fs": "^4.1.11",
     "libsodium-wrappers": "^0.7.3",
     "node-opus": "^0.3.0",
     "opusscript": "^0.0.6",
+    "sodium": "^2.0.3",
     "uws": "^10.148.0",
     "youtube-dl": "^1.12.2",
     "ytdl-core": "^0.20.4"
