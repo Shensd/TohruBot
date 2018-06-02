@@ -1,3 +1,5 @@
+// @flow
+
 const Discord = require('discord.js');
 const ytdl = require("ytdl-core");
 const youtubedl = require("youtube-dl");
@@ -6,8 +8,15 @@ const youtubedl = require("youtube-dl");
 const PLAYER_DEBUG_LOGGING = true;
 
 class Song {
+    loaded: boolean;
+    loading: boolean;
 
-    constructor(url, info_fetched) {
+    url: string;
+    
+    stream: ytdl.Readable;
+    info: youtubedl.Info;
+
+    constructor(url: string, info_fetched: function) {
         this.loaded = false;
         this.loading = false;
 
@@ -53,8 +62,18 @@ class Song {
 }
 
 class GuildMusicController {
+    guild: Discord.Guild;
 
-    constructor(guild) {
+    active_stream: ytdl.Readable | ?null;
+    active_song: Song | ?null;
+
+    queue: Array<Song>;
+
+    disconnect_timer: global.Timer;
+    
+    last_channel: Discord.VoiceChannel;
+
+    constructor(guild: Discord.Guild) {
         this.guild            = guild;
 
         this.active_stream    = null;
@@ -72,12 +91,8 @@ class GuildMusicController {
         return !!(this.disconnect_timer);
     }
 
-    get has_voice_connection() {
-        return !!(this.guild.voiceConnection);
-    }
-
     get voice_connection() {
-        return this.guild.voiceConnection;
+        this.guild.voiceConnection;
     }
 
     clear_disconnect_timer() {
@@ -98,7 +113,7 @@ class GuildMusicController {
             this.active_stream = null;
             this.disconnect_timer = null;
 
-        }, 300 * 1000);
+        }, 1 * 1000);
     }
 
     clear_queue() {
@@ -123,7 +138,7 @@ let active_streams = {
 }
 
 /* GUILD ACCOUNT MANAGEMENT */
-function get_guild_account(guild) {
+function get_guild_account(guild: Discord.Guild) {
     let guild_account;
 
     if(!guild_account_exists(guild)) {
@@ -135,11 +150,11 @@ function get_guild_account(guild) {
     return guild_account;
 }
 
-function guild_account_exists(guild) {
+function guild_account_exists(guild: Discord.Guild) {
     return !!active_streams[guild.id];
 }
 
-function create_guild_account(guild) {
+function create_guild_account(guild: Discord.Guild) {
     active_streams[guild.id] = new GuildMusicController(guild);
 
     return active_streams[guild.id];
@@ -150,7 +165,7 @@ function create_guild_account(guild) {
  * @param {Song} song 
  * @param {Guild} guild 
  */
-function load_buffer(song, guild) {
+function load_buffer(song: Song, guild: Discord.Guild) {
     
     let guild_account = get_guild_account(guild);
     
@@ -178,7 +193,7 @@ function load_buffer(song, guild) {
  * @param {Song} song 
  * @param {Message} msg 
  */
-function add_to_queue(song, msg) {
+function add_to_queue(song: Song, msg: Discord.Message) {
 
     let guild_account = get_guild_account(msg.guild);
 
@@ -217,7 +232,7 @@ function add_to_queue(song, msg) {
  * @param {Guild} guild 
  * @param {String} origin
  */
-function play_next_in_queue(guild, origin) {
+function play_next_in_queue(guild: Discord.Guild, origin: string) {
  
     // allow end of stream from within method
     if(origin === "self called") return;
@@ -225,7 +240,7 @@ function play_next_in_queue(guild, origin) {
     // rare case error check, if there is no guild account then don't do anything
     if(!guild_account_exists(guild)) return;
 
-    guild_account = get_guild_account(guild);
+    let guild_account = get_guild_account(guild);
 
     let queue = guild_account.queue;
 
@@ -260,7 +275,7 @@ function play_next_in_queue(guild, origin) {
  * @param {Song} song 
  * @param {Guild} guild 
  */
-function play_stream(song, guild) {
+function play_stream(song: Song, guild: Discord.Guild) {
     let guild_account = get_guild_account(guild);
     let connection = guild.voiceConnection;
 
@@ -298,7 +313,7 @@ function play_stream(song, guild) {
 
 /* USER COMMANDS */
 
-function command_play(msg, bot) {
+function command_play(msg: Discord.Message, bot: Discord.ClientUser) {
     // refuse if dm 
     if(!msg.guild) return;
 
@@ -473,7 +488,9 @@ function command_stop(msg, bot) {
         let guild_account = get_guild_account(msg.guild);
         guild_account.clear_queue();
         guild_account.kill_active_stream();
-        guild_account.voice_connection.disconnect();
+        if(guild_account.voice_connection) {
+            guild_account.voice_connection.disconnect();
+        }
         msg.channel.send(":octagonal_sign: Queue cleared and disconnected from voice channel");
 
         guild_account.last_channel = msg.channel;
