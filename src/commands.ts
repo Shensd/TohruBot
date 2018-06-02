@@ -1,30 +1,49 @@
-const fs = require('fs');
+import * as fs from 'fs'
+
 const Discord = require('discord.js');
 
-const root_img = "./res/img/";
+const root_img = "../res/img/";
 
-const file_pics = './res/json/pics.json';
+const file_pics = '../res/json/pics.json';
 const pics = require(file_pics);
 
-const ytdl = require("ytdl-core");
-const youtubedl = require("youtube-dl");
+import * as ytdl from 'ytdl-core'
 
-const music = require("./music.js")
+// const ytdl = require("ytdl-core");
+import * as youtubedl from 'youtube-dl'
+import { Message, Client } from 'discord.js';
+//const youtubedl = require("youtube-dl");
 
+import {command_clear as clear,
+        command_play as play,
+        command_skip as skip,
+        command_stop as stop,
+        command_link as link,
+        command_queue as queue,
+        command_voteskip as voteskip } from './music'
 
-function img_reply(msg, img) {
+function img_reply(msg: Message, img: string) {
     msg.reply("", {files:[root_img + pics[img]]});
 }
 
+// defining the structure of our commands
+interface ICommand {
+    name: string;
+    description: string;
+    category: string;
+    usage: string;
+    admin: boolean;
+    process(msg: Message, bot: Client): void;
+}
 
-var commands = {
+export const commands: {[key: string]: ICommand} = {
     "help" : {
         name: "help",
         description: "displays this output or can be used for more info on a specific command",
         category: "utility",
         usage: "$help [commandname]",
         admin: false,
-        process: function(msg, bot) {
+        process: function(msg: Message, bot: Client) {
             let args = msg.content.split(" ").slice(1, msg.content.split(" ").length);
             if(msg.content.split(" ").length > 1) {
                 if(commands[args.join(" ").toLowerCase()]) {
@@ -42,11 +61,11 @@ var commands = {
             }
             let str = "```";
             let longest_name = 0;
-            for(k in commands) {
+            for(const k in commands) {
                 let obj = commands[k];
                 if(obj.name.length > longest_name) longest_name = obj.name.length;
             }
-            for(k in commands) {
+            for(const k in commands) {
                 let filler_str = "";
                 let obj = commands[k];
                 let filler_len = (longest_name + 1) - obj.name.length;
@@ -112,7 +131,7 @@ var commands = {
         admin: false,
         process: function(msg, bot) {
 
-            music.play(msg, bot);
+            play(msg, bot);
 
         }
     },
@@ -131,7 +150,7 @@ var commands = {
         admin: true,
         process: function(msg, bot) {
 
-            music.skip(msg, bot);
+            skip(msg, bot);
 
         }
     },
@@ -142,8 +161,7 @@ var commands = {
         usage: "$queue",
         admin: false,
         process: function(msg, bot) {
-
-            music.queue(msg, bot);
+            queue(msg, bot);
 
         }
     },
@@ -169,7 +187,7 @@ var commands = {
         admin: true,
         process: function(msg, bot) {
 
-            music.stop(msg, bot);
+            stop(msg, bot);
 
         }
     },
@@ -181,7 +199,7 @@ var commands = {
         admin: true,
         process: function(msg, bot) {
 
-            music.clear(msg, bot);
+            clear(msg, bot);
             
         }
     },
@@ -192,8 +210,7 @@ var commands = {
         usage: "$link",
         admin: false,
         process: function(msg, bot) {
-
-            music.link(msg, bot);
+            link(msg, bot);
             
         }
     }
@@ -209,5 +226,3 @@ var commands = {
     }
     */
 }
-
-exports.commands = commands;

@@ -1,40 +1,40 @@
-// @Flow
-
 const Discord = require('discord.js');
-const ytdl = require("ytdl-core");
-const youtubedl = require("youtube-dl");
+import * as ytdl from 'ytdl-core'
+import * as youtubedl from 'youtube-dl'
+import { Readable } from 'stream';
+import { Guild, VoiceChannel, TextChannel, Message, StreamDispatcher, VoiceConnection, Client } from 'discord.js';
 
 // set this to true to get all the delicious voice debug info in console
 const PLAYER_DEBUG_LOGGING = true;
 
 class Song {
-
     loaded: boolean;
     loading: boolean;
+    info?: any;
+    stream?: Readable;
 
-    info: youtubedl.Info;
-    url: string; 
-
-    stream: ytdl.Readable;
-
-    constructor(url: string, info_fetched: function) {
+    // declaring 'public' in the constructor in TS automatically adds 
+    // the property to the class without doing 'this.url = url'
+    constructor(public url: string, info_fetched: (song: Song) => any) {
         this.loaded = false;
         this.loading = false;
 
-        let request: string;
+        let request;
         if(!ytdl.validateURL(url)) {
             request = `ytsearch:${url}`;
         } else {
             request = url;
         }
 
-        let search: youtubedl.Youtubedl = youtubedl(
+        //@ts-ignore
+        let search = youtubedl(
             request,
             ["--skip-download"]
         );
 
-        search.on('info', (info) => {
+        search.on('info', (info: any) => {
             this.info = info;
+            console.log(info);
             this.url = info.id;
 
             info_fetched(this);
@@ -50,10 +50,11 @@ class Song {
 
         this.loading = true;
 
-        this.stream = ytdl(this.url, {format: 'audioonly'});
+        this.stream = ytdl(this.url, {filter: 'audioonly'});
         this.stream.on("readable", () => {
             this.loaded = true;
             this.loading = false;
+            //@ts-ignore
             if(PLAYER_DEBUG_LOGGING) console.log(`${this.info.title} NOW READABLE`);
         });
         this.stream.on("error", (e) => {
@@ -63,19 +64,14 @@ class Song {
 }
 
 class GuildMusicController {
-
-    guild: Discord.Guild;
-
-    active_stream: ytdl.Readable | ?null;
-    active_song: Song | ?null;
-    queue: Array<Song>;
-
-    disconnect_timer: global.Timer | ?null;
-    last_channel: Discord.TextChannel | Discord.DMChannel | Discord.GroupDMChannel | ?null;
-
-    constructor(guild: Discord.Guild) {
+    guild: Guild;
+    disconnect_timer: NodeJS.Timer | null;
+    last_channel: TextChannel | null;
+    queue: Song[];
+    active_song: Song | null;
+    active_stream: StreamDispatcher | null | 1;
+    constructor(guild: Guild) {
         this.guild            = guild;
-
         this.active_stream    = null;
         this.active_song      = null;
         this.queue            = []; //filled with song objects
@@ -108,10 +104,13 @@ class GuildMusicController {
 
     start_disconnect_timer() {
         this.disconnect_timer = setTimeout(() => {
-
-            if(this.voice_connection) {
+            // 
+            if(this.voice_connection && this.last_channel) {
                 this.voice_connection.disconnect();
                 this.last_channel.send(":x: Disconnected due to inactivity");
+            }
+            else if (this.voice_connection && !this.last_channel){
+                console.log('No channel was recorded upon timing out');
             }
 
             this.active_stream = null;
@@ -129,7 +128,7 @@ class GuildMusicController {
     }
 
     kill_active_stream() {
-        if(this.has_active_stream) {
+        if(this.active_stream instanceof StreamDispatcher) {
             this.active_stream.end("self called");
         }
         this.active_stream = null;
@@ -137,28 +136,24 @@ class GuildMusicController {
 }
 
 
-let active_streams = {
-    "example890283901289301": new GuildMusicController()
-}
+let active_streams: {[guild: string]: GuildMusicController} = {}
 
 /* GUILD ACCOUNT MANAGEMENT */
-function get_guild_account(guild: Discord.Guild) {
-    let guild_account: GuildMusicController;
+function get_guild_account(guild: Guild): GuildMusicController {
+    let guild_account;
 
     if(!guild_account_exists(guild)) {
-        guild_account = create_guild_account(guild);
-    } else {
-        guild_account = active_streams[guild.id];
+        return create_guild_account(guild);
     }
 
-    return guild_account;
+    return active_streams[guild.id];
 }
 
-function guild_account_exists(guild: Discord.Guild) {
+function guild_account_exists(guild: Guild) {
     return !!active_streams[guild.id];
 }
 
-function create_guild_account(guild: Discord.Guild) {
+function create_guild_account(guild: Guild) {
     active_streams[guild.id] = new GuildMusicController(guild);
 
     return active_streams[guild.id];
@@ -167,37 +162,29 @@ function create_guild_account(guild: Discord.Guild) {
 /**
  * Delays until a song is loaded and ready to be played
  * @param {Song} song 
- * @param {Discord.Guild} guild 
+ * @param {Guild} guild 
  */
-function load_buffer(song: Song, guild: Discord.Guild) {
+function load_buffer(song: Song, guild: Guild) {
+    let guild_account = get_guild_account(guild);
     
-    let guild_account: GuildMusicController = get_guild_account(guild);
-    
-    // prevent double playing of songs if current isn't loaded yet by faking an active stream
-    if(!guild_account.has_active_stream) {
-        if(PLAYER_DEBUG_LOGGING) console.log("NO ACTIVE STREAM, FAKING");
-        guild_account.active_stream = ytdl();
-    }
-
     // check if song is ready, create and play if it is or postpone if it isnt
-    if(PLAYER_DEBUG_LOGGING) console.log(`LOADED ${song.loaded}`);
     if(song.loaded) {
+    if(PLAYER_DEBUG_LOGGING) console.log(`LOADED ${song.loaded}`);        
         play_stream(song, guild);
     } else {
         song.load();
         setTimeout(() => {
             load_buffer(song, guild);
         }, 100);
-        return;
     }
 }
 
 /**
  * Adds a song to a guild's queue
  * @param {Song} song 
- * @param {Discord.Message} msg 
+ * @param {Message} msg 
  */
-function add_to_queue(song: Song, msg: Discord.Message) {
+function add_to_queue(song: Song, msg: Message) {
 
     let guild_account = get_guild_account(msg.guild);
 
@@ -227,16 +214,18 @@ function add_to_queue(song: Song, msg: Discord.Message) {
 
     msg.channel.send(embed);
 
-    guild_account.last_channel = msg.channel;
+    // channel is of type Channel, we're casting it to TextChannel as it 
+    // inherits from Channel
+    guild_account.last_channel = <TextChannel> msg.channel;
 
 }
 
 /**
  * Plays next item in a given guild's queue
- * @param {Discord.Guild} guild 
- * @param {string} origin
+ * @param {Guild} guild 
+ * @param {String} origin
  */
-function play_next_in_queue(guild: Discord.Guild, origin: string | ?null) {
+function play_next_in_queue(guild: Guild, origin?: string) {
  
     // allow end of stream from within method
     if(origin === "self called") return;
@@ -244,18 +233,18 @@ function play_next_in_queue(guild: Discord.Guild, origin: string | ?null) {
     // rare case error check, if there is no guild account then don't do anything
     if(!guild_account_exists(guild)) return;
 
-    guild_account = get_guild_account(guild);
+    const guild_account = get_guild_account(guild);
 
     let queue = guild_account.queue;
 
     guild_account.kill_active_stream();
 
-    if(origin === "skip") {
+    if(origin === "skip" && guild_account.last_channel) {
         guild_account.last_channel.send("Song skipped :arrow_right:");
     }
     
     // don't send queue finished if it was manually destroyed
-    if(queue.length == 0 && !(origin === "stop")) {
+    if(queue.length == 0 && !(origin === "stop") && guild_account.last_channel) {
         guild_account.last_channel.send(":white_check_mark: Queue Finished");
         return;
     }
@@ -267,9 +256,10 @@ function play_next_in_queue(guild: Discord.Guild, origin: string | ?null) {
 
     load_buffer(queue[0], guild);
 
-    guild_account.last_channel.send(
-        `**Now playing** :musical_note: \`${guild_account["active_song"].info.title}\` :musical_note:`
-    );
+    if (guild_account.last_channel)
+        guild_account.last_channel.send(
+            `**Now playing** :musical_note: \`${guild_account["active_song"]!.info.title}\` :musical_note:`
+        );
 
     guild_account.pop_queue();
 }
@@ -277,9 +267,9 @@ function play_next_in_queue(guild: Discord.Guild, origin: string | ?null) {
 /**
  * Plays a song in a given guild
  * @param {Song} song 
- * @param {Discord.Guild} guild 
+ * @param {Guild} guild 
  */
-function play_stream(song: Song, guild: Discord.Guild) {
+function play_stream(song: Song, guild: Guild) {
     let guild_account = get_guild_account(guild);
     let connection = guild.voiceConnection;
 
@@ -288,36 +278,41 @@ function play_stream(song: Song, guild: Discord.Guild) {
     let streamOptions = {seek: 0, volume: 1};
 
     // clear auto disconnect since we are now active again
-    if(guild_account.has_disconnect_timer) {
-        guild_account.clear_disconnect_timer();
-    }
+    // but no need to check twice
+    guild_account.clear_disconnect_timer();
 
     guild_account.active_song = song; 
-    guild_account.active_stream = connection.playStream(stream, streamOptions);
 
-    if(PLAYER_DEBUG_LOGGING) console.log(`PLAYING ${guild_account["active_song"].info.title}`);
+    if (stream){
+        guild_account.active_stream = connection.playStream(stream, streamOptions);
+        if(PLAYER_DEBUG_LOGGING) console.log(`PLAYING ${guild_account["active_song"]!.info.title}`);
 
-    guild_account.active_stream.on('error', e => {
-        console.log(e);
-    });
-    guild_account.active_stream.on('speaking', e => {
-        if(PLAYER_DEBUG_LOGGING) console.log(`SPEAKING ${e}`);
-    });
+        guild_account.active_stream.on('error', (e: Error) => {
+            console.log(e);
+        });
+        guild_account.active_stream.on('speaking', e => {
+            if(PLAYER_DEBUG_LOGGING) console.log(`SPEAKING ${e}`);
+        });
 
-    guild_account.active_stream.on('end', reason => {
-        if(PLAYER_DEBUG_LOGGING) console.log(`ENDED ${guild_account["active_song"].info.title}`);
-        // 5 minutes of no activity and bot leaves voice channel
-        guild_account.start_disconnect_timer();
-        
-        if(PLAYER_DEBUG_LOGGING) console.log(`REASON ${reason}`);
-        play_next_in_queue(guild, reason);
+        guild_account.active_stream.on('end', reason => {
+            if(PLAYER_DEBUG_LOGGING) console.log(`ENDED ${guild_account["active_song"]!.info.title}`);
+            // 5 minutes of no activity and bot leaves voice channel
+            guild_account.start_disconnect_timer();
+            
+            if(PLAYER_DEBUG_LOGGING) console.log(`REASON ${reason}`);
+            play_next_in_queue(guild, reason);
 
-    });
+        });
+    }
+    else 
+        console.log('stream was not found')
+    
+    
 }
 
 /* USER COMMANDS */
 
-function command_play(msg, bot) {
+export function command_play(msg: Message, bot: Client) {
     // refuse if dm 
     if(!msg.guild) return;
 
@@ -365,7 +360,7 @@ function command_play(msg, bot) {
     } else {
         if(vc.joinable) {
             vc.join()
-                .then((connection) => {
+                .then((connection: VoiceConnection) => {
     
                     let song = new Song(video_desc, (song) => {
                         add_to_queue(song, msg);
@@ -381,7 +376,7 @@ function command_play(msg, bot) {
     }
 }
 
-function command_skip(msg, bot) {
+export function command_skip(msg: Message, bot: Client) {
     // refuse if dm 
     if(!msg.guild) return;
 
@@ -397,7 +392,7 @@ function command_skip(msg, bot) {
     // dont let users in a different voice channel skip songs
     // while bot is currently playing in another
     if(me_vc != vc) {
-        if(guild_account_exists(msg.guild) && (get_guild_account(msg.guild)["active"] != null) ) {
+        if(guild_account_exists(msg.guild) && (get_guild_account(msg.guild)) ) {
             msg.channel.send(":x: User not in same voice channel as bot");
             return;
         }
@@ -417,18 +412,19 @@ function command_skip(msg, bot) {
     }
 
     // if there is a guild account and stream, skip it
-    guild_account.active_stream.end("skip");
+    if (guild_account.active_stream instanceof StreamDispatcher)
+        guild_account.active_stream.end("skip");
 
-    guild_account.last_channel = msg.channel;
+    guild_account.last_channel = <TextChannel> msg.channel;
 }
 
-function command_queue(msg, bot, tries) {
+export function command_queue(msg: Message, bot: Client, tries?: number) {
     // refuse if dm 
     if(!msg.guild) return;
 
     // if there is no guild account, or we have reached the max 
     // amount of retries, empty queue
-    if(!guild_account_exists(msg.guild) || tries > 10) {
+    if(!guild_account_exists(msg.guild) || (tries && tries > 10)) {
         msg.channel.send(":x: There are no songs in the queue.");
         return;
     }
@@ -440,7 +436,7 @@ function command_queue(msg, bot, tries) {
     if(guild_account.active_song == null) {
         setTimeout(() => {
             if(tries == null) tries = 0;
-            this.queue(msg, bot, tries+1);
+            return command_queue(msg, bot, tries+1);
         }, 100);
         return;
     } 
@@ -468,10 +464,10 @@ function command_queue(msg, bot, tries) {
 
     msg.channel.send(embed);
 
-    guild_account.last_channel = msg.channel;
+    guild_account.last_channel = <TextChannel> msg.channel;
 }
 
-function command_voteskip(msg, bot) {
+export function command_voteskip(msg: Message, bot: Client) {
     // refuse if dm 
     if(!msg.guild) return;
     /*
@@ -487,7 +483,7 @@ function command_voteskip(msg, bot) {
     */
 }
 
-function command_stop(msg, bot) {
+export function command_stop(msg: Message, bot: Client) {
     // refuse if dm 
     if(!msg.guild) return;
     if(guild_account_exists(msg.guild)) {
@@ -497,7 +493,7 @@ function command_stop(msg, bot) {
         guild_account.voice_connection.disconnect();
         msg.channel.send(":octagonal_sign: Queue cleared and disconnected from voice channel");
 
-        guild_account.last_channel = msg.channel;
+        guild_account.last_channel = <TextChannel> msg.channel;
 
     // rare case where bot is in voice channel with no guild account,
     // happens on bot restart
@@ -509,7 +505,7 @@ function command_stop(msg, bot) {
     }
 }
 
-function command_clear(msg, bot) {
+export function command_clear(msg: Message, bot: Client) {
     // refuse if dm 
     if(!msg.guild) return;
 
@@ -518,11 +514,11 @@ function command_clear(msg, bot) {
         guild_account.clear_queue();
         msg.channel.send(":white_check_mark: Queue cleared");
 
-        guild_account.last_channel = msg.channel;
+        guild_account.last_channel = <TextChannel> msg.channel;
     }
 }
 
-function command_link(msg, bot, tries) {
+export function command_link(msg: Message, bot: Client, tries?: number){
     if(!msg.guild) return;
 
     // nothing playing if there is no guild account or we have reached max retries
@@ -537,15 +533,16 @@ function command_link(msg, bot, tries) {
     // if there is an active stream but no song info, wait and retry until there is
     if(guild_account.has_active_stream) {
 
-        if(!guild_account.active_song.info) {
+        if(!guild_account.active_song!.info) {
             setTimeout(() => {
                 if(tries == null) tries = 0;
-                this.link(msg, bot, tries+1);
+                return command_link(msg, bot, tries+1);
             }, 100);
             return;
         } 
-
-        let song = guild_account.active_song;
+        
+        
+        let song = guild_account.active_song!;
 
         let embed = new Discord.RichEmbed();
         embed.setThumbnail(song.info.thumbnail);

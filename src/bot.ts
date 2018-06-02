@@ -1,16 +1,26 @@
 const Discord     = require('discord.js');
-const commands    = require('./commands.js');
+import {commands} from './commands'
 
-const auth        = require('./res/auth/auth.json');
-const conf        = require('./config/config.json');
-const pics        = require('./res/json/pics.json');
+const auth        = require('../res/auth/auth.json');
+const conf        = require('../config/config.json');
+const pics        = require('../res/json/pics.json');
 
-const root_img    = './res/img/';
-const root_config = "./config/"
+const root_img    = '../res/img/';
+const root_config = "../config/"
 
-const bot = new Discord.Client();
+import {Client, Message}  from 'discord.js'
+import { Utils } from './utils';
 
-let modes = {
+const bot: Client = new Discord.Client();
+
+interface IMode {
+    name: string;
+    args: string[];
+    description: string;
+    activated: boolean;
+}
+
+let modes: {[key: string]: IMode} = {
     debug: {
         name: "Debug Mode",
         args: ["-d", "--debug"],
@@ -40,7 +50,7 @@ let modes = {
 let args = process.argv.slice(1, process.argv.length);
 for(let i = 0; i < args.length; i++) {
     for(let k in modes) {
-        obj = modes[k];
+        const obj = modes[k];
         if(typeof obj.args == "string") {
             if(args[i] == obj.args) {
                 obj.activated = true;
@@ -61,13 +71,13 @@ for(let i = 0; i < args.length; i++) {
 
 if(modes.help.activated) {
     let str = "";
-    for(k in modes) {
-        obj = modes[k];
+    for(const k in modes) {
+        const obj = modes[k];
         str += obj.args + "     " + obj.name + "\n";
         str += "     " + obj.description + "\n";
     }
     console.log(str);
-    process.exit();
+    process.exit(0);
 }
 
 
@@ -84,36 +94,40 @@ bot.on('ready', () => {
 
     console.log(conf["username"] + " is ready."); 
 
+    console.log('Invite Link:');
+    // the permissions required by the bot to function
+    bot.generateInvite(36703232).then(console.log);
+
 });
 
-bot.on('message', (msg) => {
+bot.on('message', (msg: Message) => {
     if(msg.author == bot.user) return;
     if(msg.content[0] != "$") return;
     
-    let cmd = msg.content.split(" ")[0].slice(1, msg.content.split(" ")[0].length).toLowerCase();
-    let args = msg.content.split(" ").slice(1, msg.content.split(" ").length);
+    let [cmd, args] = Utils.getArgs(msg);
     
     if(modes.lock.activated) {
         console.log("Command was recieved but lock mode is enabled");
         return;
     }
 
-    if(commands.commands[cmd]) {
-        if(!commands.commands[cmd].admin) {
-            commands.commands[cmd].process(msg, bot);
-        } else { // command requires admin
-            if(!msg.guild) { //dm
-                commands.commands[cmd].process(msg, bot);
-                return;
-            }
-
-            if(msg.member.roles.exists("name", "Bot Commander")) {
-                commands.commands[cmd].process(msg, bot);
-            } else {
-                msg.channel.send(":x: Invalid permissions");
-            }
-        }
+    if(!commands[cmd]) {
+        // command does not exist
+        return;
     }
+
+    if(!commands[cmd].admin 
+        || !msg.guild
+        || msg.member.roles.exists("name", "Bot Commander")) {
+        return void commands[cmd].process(msg, bot);
+    }
+
+    else if (commands[cmd].admin && msg.member.hasPermission('ADMINISTRATOR')){
+        
+    }
+
+    msg.channel.send(":x: Invalid permissions");
+
 });
 
 bot.on('disconnect', () => {
