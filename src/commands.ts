@@ -36,7 +36,7 @@ interface ICommand {
     process(msg: Message, bot: Client): void;
 }
 
-var commands: {[key: string]: ICommand} = {
+export const commands: {[key: string]: ICommand} = {
     "help" : {
         name: "help",
         description: "displays this output or can be used for more info on a specific command",
@@ -226,5 +226,3 @@ var commands: {[key: string]: ICommand} = {
     }
     */
 }
-
-exports.commands = commands;
