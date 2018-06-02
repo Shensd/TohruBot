@@ -54,39 +54,48 @@ export const commands: {[key: string]: ICommand} = {
             let args = params.args;
             if(args.length) {
                 if(commands[args.join(" ").toLowerCase()]) {
-                    let str = "```";
+
                     let obj = commands[args.join(" ").toLowerCase()];
-                    str += "Name       : " + obj.name + "\n";
-                    str += "Description: " + obj.description + "\n";
-                    str += "Usage      : " + obj.usage + "\n";
-                    str += "```";
-                    params.msg.reply(str);
+                    
+                    let helpText = 
+                        "```" +
+                        `Name       : ${ obj.name }\n` +
+                        `Description: ${ obj.description }\n` +
+                        `Usage      : ${ obj.usage }\n` +
+                        "```";
+
+                    params.msg.reply(helpText);
                 } else {
                     params.msg.reply("Command not found.");
                 }
                 return;
             }
-            let str = "```";
+
+            let helpText = "```";
             let longestName = 0;
             for(const k in commands) {
-                let obj = commands[k];
-                if(obj.name.length > longestName) longestName = obj.name.length;
+
+                let command = commands[k];
+
+                if(command.name.length > longestName) longestName = command.name.length;
+
             }
             for(const k in commands) {
-                let filterStr = "";
-                let obj = commands[k];
-                let filterLen = (longestName + 1) - obj.name.length;
-                for(let i = 0; i < filterLen; i++) {
-                    filterStr += "-";
+                let bufferStr = "";
+                let command = commands[k];
+                let bufferLen = (longestName + 1) - command.name.length;
+                for(let i = 0; i < bufferLen; i++) {
+                    bufferStr += "-";
                 }
-                str += obj.name + " " + filterStr + " " + obj.description + "\n";
+                helpText += `${ command.name } ${ bufferStr } ${ command.description }\n`;
             }
-            str = str.substring(0, str.length - 2);
-            str += "```\n";
-            str += "Admin commands require the `Bot Commander` role\n";
-            str += "Use `$help commandname` for more information";
+            helpText = 
+                `${ helpText.substring(0, helpText.length - 2) }` +
+                "```\n" +
+                "Admin commands require the `Bot Commander` role\n" +
+                "Use `$help commandname` for more information";
             
-            params.msg.author.send(str);
+            params.msg.author.send(helpText);
             params.msg.reply("I have sent you a list of my commands!");
         }
     },
