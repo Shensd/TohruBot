@@ -1,5 +1,7 @@
 # Tohru Bot
 
+![Banner](./banner.png)
+
 Another Discord Music Bot
 
 Tohru bot is the only™ Discord bot (not really) that plays music from Youtube, either through given links or search queries.
