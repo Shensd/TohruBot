@@ -2,12 +2,12 @@ const Discord = require('discord.js');
 import * as ytdl from 'ytdl-core'
 import * as youtubedl from 'youtube-dl'
 import { Readable } from 'stream';
-import { Guild, VoiceChannel, TextChannel, Message, StreamDispatcher, VoiceConnection, Client, RichEmbed } from 'discord.js';
+import { Guild, VoiceChannel, TextChannel, Message, StreamDispatcher, VoiceConnection, Client } from 'discord.js';
 
 // set this to true to get all the delicious voice debug info in console
 const PLAYER_DEBUG_LOGGING = false;
 
-class Song {
+export class Song {
     loaded: boolean;
     loading: boolean;
     info?: any;
@@ -78,6 +78,8 @@ class GuildMusicController {
         this.disconnectTimer = undefined;
         this.lastChannel     = undefined;
     }
+
+    constructor(public guild: Guild) {}
 
     get hasActiveStream() {
         return !!(this.activeStream);
@@ -167,8 +169,6 @@ let activeStreams: {[guild: string]: GuildMusicController} = {}
 
 /* GUILD ACCOUNT MANAGEMENT */
 function getGuildAccount(guild: Guild): GuildMusicController {
-    let guildAccount;
-
     if(!guildAccountExists(guild)) {
         activeStreams[guild.id] = new GuildMusicController(guild);
         return activeStreams[guild.id];
@@ -372,7 +372,6 @@ export function commandPlay(msg: Message, bot: Client) {
                     let song: Song = new Song(videoDesc, (song) => {
                         addToQueue(song, msg);
                     });
-    
                 })
                 .catch((e) => {
                     console.log(e);
@@ -448,27 +447,8 @@ export function commandQueue(msg: Message, bot: Client, tries?: number) {
         return;
     } 
 
-    let queue: Array<Song> = guildAccount.queue;
-    let embed: RichEmbed = new Discord.RichEmbed();
-
-    embed.addField("Currently Playing", guildAccount.activeSong.info.title);
-    embed.setThumbnail(guildAccount.activeSong.info.thumbnail);
-
-    if(queue.length > 0) {
-        let message: string = "";
-
-        // print queue items up to 5
-        for(let i = 0; i < ((queue.length > 5) ? 5 : queue.length); i++) {
-            message += "" + (i+1) + ". " + queue[i].info.title + "\n";
-        }
-
-        if(queue.length > 5) message += "...";
-        
-        embed.addField("Queue", message);
-    } else {
-        embed.addField("Queue", "No videos in queue");
-    }
-
+    let queue = guildAccount.queue;
+    let embed = MusicEmbeds.queueEmbed(guildAccount);
     msg.channel.send(embed);
 
     guildAccount.lastChannel = <TextChannel> msg.channel;
@@ -493,6 +473,7 @@ export function commandVoteSkip(msg: Message, bot: Client) {
 export function commandStop(msg: Message, bot: Client) {
     // refuse if dm 
     if(!msg.guild) return;
+
     if(guildAccountExists(msg.guild)) {
         let guildAccount: GuildMusicController = getGuildAccount(msg.guild);
         guildAccount.clearQueue();
@@ -504,10 +485,8 @@ export function commandStop(msg: Message, bot: Client) {
 
     // rare case where bot is in voice channel with no guild account,
     // happens on bot restart
-    } else if (msg.guild.me.voiceChannel) {
-        msg.guild.me.voiceChannel.join().then((c) => {
-            c.disconnect();
-        });
+    } else if (msg.guild.me.voiceChannel && msg.guild.voiceConnection) {
+        msg.guild.voiceConnection.disconnect()
         msg.channel.send(":octagonal_sign: Queue cleared and disconnected from voice channel");
     }
 }
@@ -549,15 +528,8 @@ export function commandLink(msg: Message, bot: Client, tries?: number){
         } 
         
         
-        let song: Song = guildAccount.activeSong!;
-
-        let embed: RichEmbed = new Discord.RichEmbed();
-        embed.setThumbnail(song.info.thumbnail);
-        embed.setTitle(`**${song.info.title}**`);
-        embed.setAuthor("Currently Playing", msg.author.avatarURL);
-        embed.addField("Uploader", song.info.uploader);
-        embed.addField("Length", song.info.duration);
-        embed.setURL(`https://www.youtube.com/watch?v=${song.info.id}`);
+        let song = guildAccount.activeSong!;
+        let embed = MusicEmbeds.linkEmbed(guildAccount, song, msg.author.avatarURL);
 
         msg.channel.send(embed);
     } else {
