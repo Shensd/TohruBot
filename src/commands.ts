@@ -47,12 +47,13 @@ export const commands: {[key: string]: ICommand} = {
             let args = msg.content.split(" ").slice(1, msg.content.split(" ").length);
             if(msg.content.split(" ").length > 1) {
                 if(commands[args.join(" ").toLowerCase()]) {
-                    let str = "```";
                     let obj = commands[args.join(" ").toLowerCase()];
-                    str += "Name       : " + obj.name + "\n";
-                    str += "Description: " + obj.description + "\n";
-                    str += "Usage      : " + obj.usage + "\n";
-                    str += "```";
+                    let str: string = 
+                    `Name       : ${obj.name}\n` +
+                    `Description: ${obj.description}\n` +
+                    `Usage      : ${obj.usage}\n` +
+                    `\`\`\``;
+                    
                     msg.reply(str);
                 } else {
                     msg.reply("Command not found.");
