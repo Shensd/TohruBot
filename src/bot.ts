@@ -1,4 +1,3 @@
-// @flow
 const Discord     = require('discord.js');
 const commands    = require('./commands.js');
 
@@ -9,9 +8,18 @@ const pics        = require('../res/json/pics.json');
 const root_img    = '../res/img/';
 const root_config = "../config/"
 
-const bot = new Discord.Client();
+import {Client}  from 'discord.js'
 
-let modes = {
+const bot: Client = new Discord.Client();
+
+interface IMode {
+    name: string;
+    args: string[];
+    description: string;
+    activated: boolean;
+}
+
+let modes: {[key: string]: IMode} = {
     debug: {
         name: "Debug Mode",
         args: ["-d", "--debug"],
@@ -41,7 +49,7 @@ let modes = {
 let args = process.argv.slice(1, process.argv.length);
 for(let i = 0; i < args.length; i++) {
     for(let k in modes) {
-        obj = modes[k];
+        const obj = modes[k];
         if(typeof obj.args == "string") {
             if(args[i] == obj.args) {
                 obj.activated = true;
@@ -62,8 +70,8 @@ for(let i = 0; i < args.length; i++) {
 
 if(modes.help.activated) {
     let str = "";
-    for(k in modes) {
-        obj = modes[k];
+    for(const k in modes) {
+        const obj = modes[k];
         str += obj.args + "     " + obj.name + "\n";
         str += "     " + obj.description + "\n";
     }
@@ -87,7 +95,7 @@ bot.on('ready', () => {
 
     console.log('Invite Link:');
     // the permissions required by the bot to function
-    bot.generateInvite('36703232').then(console.log);
+    bot.generateInvite(36703232).then(console.log);
 
 });
 

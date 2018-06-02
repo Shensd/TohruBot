@@ -4,3 +4,7 @@ res/auth/auth\.json
 node_modules/
 
 res/auth/example_auth\.json
+
+lib/
+
+dist/
