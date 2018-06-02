@@ -3,15 +3,19 @@ import * as ytdl from 'ytdl-core'
 import * as youtubedl from 'youtube-dl'
 import { Readable } from 'stream';
 import { Guild, VoiceChannel, TextChannel, Message, StreamDispatcher, VoiceConnection, Client } from 'discord.js';
+import { MusicEmbeds } from './embeds';
 
 // set this to true to get all the delicious voice debug info in console
-const PLAYER_DEBUG_LOGGING = false;
+const PLAYER_DEBUG_LOGGING = true;
 
 export class Song {
     loaded: boolean;
     loading: boolean;
     info?: any;
-    stream?: Readable;
+    //stream?: Readable;
+    stream?: any;
+    request: string;
+    info_fetched: (song: Song) => any;
 
     // declaring 'public' in the constructor in TS automatically adds 
     // the property to the class without doing 'this.url = url'
@@ -19,29 +23,14 @@ export class Song {
         this.loaded = false;
         this.loading = false;
 
-        let request;
+        this.info_fetched = info_fetched;
+
+        this.request = "";
         if(!ytdl.validateURL(url)) {
-            request = `ytsearch:${url}`;
+            this.request = `ytsearch:${url}`;
         } else {
-            request = url;
+            this.request = url;
         }
-
-        //@ts-ignore
-        let search = youtubedl(
-            request,
-            ["--skip-download"]
-        );
-
-        search.on('info', (info: any) => {
-            this.info = info;
-            console.log(info);
-            this.url = info.id;
-
-            info_fetched(this);
-        }); 
-        search.on('error', (e) => {
-            console.log(e);
-        });
     }
 
     load() {
@@ -50,26 +39,41 @@ export class Song {
 
         this.loading = true;
 
-        this.stream = ytdl(this.url, {filter: 'audioonly'});
+        this.stream = youtubedl(
+            this.request,
+            [   
+                "--skip-download"
+            ],
+            {}
+        );
+
+        this.stream.on('info', (info: any) => {
+            this.info = info;
+            console.log(info);
+            this.url = info.id;
+
+            this.info_fetched(this);
+        }); 
         this.stream.on("readable", () => {
             this.loaded = true;
             this.loading = false;
-            //@ts-ignore
             if(PLAYER_DEBUG_LOGGING) console.log(`${this.info.title} NOW READABLE`);
         });
-        this.stream.on("error", (e) => {
+        this.stream.on("error", (e: Error) => {
             console.log(e);
         });
+        
     }
 }
 
-class GuildMusicController {
+export class GuildMusicController {
     guild: Guild;
     disconnectTimer?: NodeJS.Timer;
     lastChannel?: TextChannel;
     queue: Song[];
     activeSong?: Song;
     activeStream?: StreamDispatcher | 1;
+    
     constructor(guild: Guild) {
         this.guild            = guild;
         this.activeStream    = undefined;
@@ -78,8 +82,6 @@ class GuildMusicController {
         this.disconnectTimer = undefined;
         this.lastChannel     = undefined;
     }
-
-    constructor(public guild: Guild) {}
 
     get hasActiveStream() {
         return !!(this.activeStream);
@@ -157,7 +159,7 @@ class GuildMusicController {
     }
 
     killActiveStream() {
-        if(this.activeStream instanceof StreamDispatcher) {
+        if(this.activeStream && this.activeStream != 1) {
             this.activeStream.end("self called");
         }
         this.activeStream = undefined;
@@ -213,7 +215,7 @@ function addToQueue(song: Song, msg: Message) {
 
     let guildAccount: GuildMusicController = getGuildAccount(msg.guild);
 
-    let embed: RichEmbed = new Discord.RichEmbed();
+    let embed = new Discord.RichEmbed();
     embed.setThumbnail(song.info.thumbnail);
     embed.setTitle(`**${song.info.title}**`);
     embed.addField("Uploader", song.info.uploader);
@@ -418,7 +420,8 @@ export function commandSkip(msg: Message, bot: Client) {
     }
 
     // if there is a guild account and stream, skip it
-    if (guildAccount.activeStream instanceof StreamDispatcher)
+    console.log(guildAccount.activeStream);
+    if (guildAccount.activeStream != 1)
         guildAccount.activeStream.end("skip");
 
     guildAccount.lastChannel = <TextChannel> msg.channel;
