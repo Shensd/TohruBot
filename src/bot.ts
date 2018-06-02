@@ -111,14 +111,15 @@ bot.on('message', (msg: Message) => {
         console.log("Command was recieved but lock mode is enabled");
         return;
     }
-    
+
     if(!commands[cmd]) {
         // command does not exist
         return;
     }
 
-    if((commands[cmd].admin && msg.member.hasPermission('ADMINISTRATOR'))  
-        || !msg.guild 
+    if((commands[cmd].admin && msg.member.hasPermission('ADMINISTRATOR'))
+        || !commands[cmd].admin
+        || !msg.guild
         || msg.member.roles.exists("name", "Bot Commander")) {
 
         const params: ICommandParams  = {
