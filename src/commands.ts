@@ -2,7 +2,7 @@ import * as fs from 'fs'
 
 const Discord = require('discord.js');
 
-const root_img = "../res/img/";
+const root_img = "res/img/";
 
 const file_pics = '../res/json/pics.json';
 const pics = require(file_pics);
@@ -121,16 +121,15 @@ export const commands: {[key: string]: ICommand} = {
         usage: "$thonk",
         admin: false,
         process: function(params: ICommandParams) {
+            console.log( pics["thonk"])
             params.msg.reply(
-                "", 
                 {
                     files: [
                         root_img + "thonk/" + pics["thonk"][Math.floor(Math.random() * pics["thonk"].length)]
                     ]
                 }
-            );
+            ).catch(console.error);
             params.msg.delete();
-
         }
     },
     "play": {
