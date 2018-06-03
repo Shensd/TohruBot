@@ -31,19 +31,10 @@ export class Song {
         } else {
             this.request = url;
         }
-    }
-
-    load() {
-
-        if(this.loaded || this.loading) return;
-
-        this.loading = true;
 
         this.stream = youtubedl(
             this.request,
-            [   
-                "--skip-download"
-            ],
+            ["--skip-download"],
             {}
         );
 
@@ -53,7 +44,15 @@ export class Song {
             this.url = info.id;
 
             this.info_fetched(this);
-        }); 
+        });
+    }
+
+    load() {
+
+        if(this.loaded || this.loading) return;
+
+        this.loading = true; 
+
         this.stream.on("readable", () => {
             this.loaded = true;
             this.loading = false;
@@ -200,6 +199,7 @@ function loadBuffer(song: Song, guild: Guild) {
     }
     else {
         song.load();
+        if (PLAYER_DEBUG_LOGGING) console.log("SONG NOT READY, WAITING AND RETRYING");
         setTimeout(() => {
             loadBuffer(song, guild);
         }, 100);
@@ -316,6 +316,7 @@ function playStream(song: Song, guild: Guild) {
 /* USER COMMANDS */
 
 export function commandPlay(msg: Message, bot: Client) {
+
     // refuse if dm 
     if(!msg.guild) return;
 
@@ -337,7 +338,7 @@ export function commandPlay(msg: Message, bot: Client) {
     // strip new lines (messes up youtube-dl)
     videoDesc.replace("\n", "");
 
-    let userVoiceChannel: VoiceChannel = msg.member.voiceChannel;
+    let userVoiceChannel = msg.member.voiceChannel;
     let botVoiceChannel: VoiceChannel = msg.guild.me.voiceChannel;
 
     // dont let users not in voice channels play songs
@@ -364,7 +365,6 @@ export function commandPlay(msg: Message, bot: Client) {
         if(userVoiceChannel.joinable) {
             userVoiceChannel.join()
                 .then((connection: VoiceConnection) => {
-    
                     let song: Song = new Song(videoDesc, (song) => {
                         addToQueue(song, msg);
                     });
