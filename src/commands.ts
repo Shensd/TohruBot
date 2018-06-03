@@ -128,7 +128,6 @@ export const commands: {[key: string]: ICommand} = {
         admin: false,
         process: function(params: ICommandParams) {
             params.msg.reply(
-                "", 
                 {
                     files: [
                         root_img + "thonk/" + pics["thonk"][Math.floor(Math.random() * pics["thonk"].length)]

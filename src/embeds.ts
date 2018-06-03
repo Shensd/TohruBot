@@ -2,11 +2,12 @@ import { RichEmbed } from "discord.js";
 import { GuildMusicController, Song } from "./music";
 
 export namespace MusicEmbeds {
-    export function queueEmbed(controller: GuildMusicController): RichEmbed {
+    export function queueEmbed(song: Song, controller: GuildMusicController): RichEmbed {
         const embed =  new RichEmbed()
 
-        embed.addField("Currently Playing", controller.activeSong!.info.title);
-        embed.setThumbnail(controller.activeSong!.info.thumbnail);
+        console.log(controller.queue);
+        embed.addField("Currently Playing", song.info.title);
+        embed.setThumbnail(song.info.thumbnail);
     
         if(controller.queue.length > 0) {
             let message = "";

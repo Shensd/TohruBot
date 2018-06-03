@@ -146,3 +146,6 @@ bot.on('debug', (info) => {
 });
 
 bot.login(auth["token"]);
+
+process.on('unhandledRejection', console.log);
+process.on('uncaughtException', console.log);
