@@ -215,17 +215,7 @@ function addToQueue(song: Song, msg: Message) {
 
     let guildAccount: GuildMusicController = getGuildAccount(msg.guild);
 
-<<<<<<< HEAD
-    let embed = new Discord.RichEmbed();
-    embed.setThumbnail(song.info.thumbnail);
-    embed.setTitle(`**${song.info.title}**`);
-    embed.addField("Uploader", song.info.uploader);
-    embed.addField("Length", song.info.duration);
-    embed.setURL(`https://www.youtube.com/watch?v=${song.info.id}`);
-
-=======
     let embed = MusicEmbeds.queueEmbed(guildAccount);
->>>>>>> 5299ce8a1d9f4ed8846271fcb8b3f7cdf77566b0
 
     // instant play if there is no song playing, add to queue if there is,
     // modify message to fit
@@ -555,7 +545,7 @@ export function commandSearch(msg: Message, bot: Client, url: string){
     //@ts-ignore
     let search = youtubedl(
         request,
-        ["--skip-download"]
+        ["--skip-download"],
         {}
     );
 
