@@ -542,7 +542,6 @@ export function commandSearch(msg: Message, bot: Client, url: string){
     let search = youtubedl(
         request,
         ["--skip-download"]
-        {}
     );
 
     search.on('info', (info: any) => {

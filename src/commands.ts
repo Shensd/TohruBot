@@ -54,33 +54,26 @@ export const commands: {[key: string]: ICommand} = {
         process: function(params: ICommandParams) {
             let args = params.args;
             if(args.length) {
-                if(commands[args.join(" ").toLowerCase()]) {
-
-                    let obj = commands[args.join(" ").toLowerCase()];
-                    
-                    let helpText = 
-                        "```" +
-                        `Name       : ${ obj.name }\n` +
-                        `Description: ${ obj.description }\n` +
-                        `Usage      : ${ obj.usage }\n` +
-                        "```";
-
-                    params.msg.reply(helpText);
-                } else {
+                let obj = commands[args.join(" ").toLowerCase()];
+                if(!obj) {
                     params.msg.reply("Command not found.");
                 }
+                
+                let helpText = 
+                    "```\n" +
+                    `Name       : ${ obj.name }\n` +
+                    `Description: ${ obj.description }\n` +
+                    `Usage      : ${ obj.usage }\n` +
+                    "```";
+
+                params.msg.reply(helpText);
                 return;
             }
 
             let helpText = "```";
-            let longestName = 0;
-            for(const k in commands) {
-
-                let command = commands[k];
-
-                if(command.name.length > longestName) longestName = command.name.length;
-
-            }
+            const commandArray: ICommand[] = Utils.arrayFromValues<ICommand>(commands); 
+            const longestName = Math.max(...commandArray.map((command: ICommand) => command.name.length))
+            
             for(const k in commands) {
                 let bufferStr = "";
                 let command = commands[k];

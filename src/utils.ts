@@ -12,4 +12,7 @@ export namespace Utils {
             return (app.owner.id === member.id)
         }) 
     }
+    export function arrayFromValues<T>(object: {[key: string]: T}): T[]{
+        return Object.keys(object).map(key => object[key]);
+    }
 }
