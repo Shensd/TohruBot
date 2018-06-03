@@ -31,11 +31,29 @@ export class Song {
         } else {
             this.request = url;
         }
+<<<<<<< HEAD
+=======
+        this.load();
+    }
 
+    load() {
+
+        if(this.loaded || this.loading) return;
+
+        this.loading = true;
+>>>>>>> 2387011d3fd40e952775287469f4bd7e09001f8d
+
+        //@ts-ignore
         this.stream = youtubedl(
             this.request,
+<<<<<<< HEAD
             ["--skip-download"],
             {}
+=======
+            [   
+                "--skip-download"
+            ]
+>>>>>>> 2387011d3fd40e952775287469f4bd7e09001f8d
         );
 
         this.stream.on('info', (info: any) => {
@@ -212,10 +230,10 @@ function loadBuffer(song: Song, guild: Guild) {
  * @param {Message} msg 
  */
 function addToQueue(song: Song, msg: Message) {
-
+    console.log('adding to queue')
     let guildAccount: GuildMusicController = getGuildAccount(msg.guild);
 
-    let embed = MusicEmbeds.queueEmbed(guildAccount);
+    let embed = MusicEmbeds.queueEmbed(song, guildAccount);
 
     // instant play if there is no song playing, add to queue if there is,
     // modify message to fit
@@ -358,14 +376,21 @@ export function commandPlay(msg: Message, bot: Client) {
 
     // use existing voice connection if it exists, otherwise create new one
     if(msg.guild.voiceConnection) {
-        let song: Song = new Song(videoDesc, (song) => {
+        new Song(videoDesc, (song) => {
+            console.log('loaded song')
             addToQueue(song, msg);
         });
     } else {
         if(userVoiceChannel.joinable) {
             userVoiceChannel.join()
                 .then((connection: VoiceConnection) => {
+<<<<<<< HEAD
                     let song: Song = new Song(videoDesc, (song) => {
+=======
+                    console.log('joined vc')
+                    new Song(videoDesc, (song) => {
+                        console.log('loaded song')
+>>>>>>> 2387011d3fd40e952775287469f4bd7e09001f8d
                         addToQueue(song, msg);
                     });
                 })
@@ -445,7 +470,7 @@ export function commandQueue(msg: Message, bot: Client, tries?: number) {
     } 
 
     let queue = guildAccount.queue;
-    let embed = MusicEmbeds.queueEmbed(guildAccount);
+    let embed = MusicEmbeds.queueEmbed(guildAccount.activeSong, guildAccount);
     msg.channel.send(embed);
 
     guildAccount.lastChannel = <TextChannel> msg.channel;
@@ -545,8 +570,7 @@ export function commandSearch(msg: Message, bot: Client, url: string){
     //@ts-ignore
     let search = youtubedl(
         request,
-        ["--skip-download"],
-        {}
+        ["--skip-download"]
     );
 
     search.on('info', (info: any) => {
