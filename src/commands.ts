@@ -1,19 +1,12 @@
-import * as fs from 'fs'
-
 const Discord = require('discord.js');
-
-const root_img = "../res/img/";
-
+const root_img = "res/img/";
 const file_pics = '../res/json/pics.json';
 const pics = require(file_pics);
 
+import * as fs from 'fs'
 import * as ytdl from 'ytdl-core'
-
-// const ytdl = require("ytdl-core");
 import * as youtubedl from 'youtube-dl'
 import { Message, Client, OAuth2Application } from 'discord.js';
-//const youtubedl = require("youtube-dl");
-
 import {commandClear as clear,
         commandPlay as play,
         commandSkip as skip,
@@ -23,6 +16,7 @@ import {commandClear as clear,
         commandVoteSkip as voteskip,
         commandSearch as search } from './music'
 import { Utils } from './utils';
+import { safeDeleteMessage } from './safe';
 
 function img_reply(msg: Message, img: string) {
     msg.reply("", {files:[root_img + pics[img]]});
@@ -122,15 +116,13 @@ export const commands: {[key: string]: ICommand} = {
         admin: false,
         process: function(params: ICommandParams) {
             params.msg.reply(
-                "", 
                 {
                     files: [
                         root_img + "thonk/" + pics["thonk"][Math.floor(Math.random() * pics["thonk"].length)]
                     ]
                 }
             );
-            params.msg.delete();
-
+            safeDeleteMessage(params.msg.channel, params.msg);
         }
     },
     "play": {
