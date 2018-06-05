@@ -31,8 +31,6 @@ export class Song {
         } else {
             this.request = url;
         }
-<<<<<<< HEAD
-=======
         this.load();
     }
 
@@ -41,19 +39,13 @@ export class Song {
         if(this.loaded || this.loading) return;
 
         this.loading = true;
->>>>>>> 2387011d3fd40e952775287469f4bd7e09001f8d
 
         //@ts-ignore
         this.stream = youtubedl(
             this.request,
-<<<<<<< HEAD
-            ["--skip-download"],
-            {}
-=======
             [   
                 "--skip-download"
             ]
->>>>>>> 2387011d3fd40e952775287469f4bd7e09001f8d
         );
 
         this.stream.on('info', (info: any) => {
@@ -63,14 +55,6 @@ export class Song {
 
             this.info_fetched(this);
         });
-    }
-
-    load() {
-
-        if(this.loaded || this.loading) return;
-
-        this.loading = true; 
-
         this.stream.on("readable", () => {
             this.loaded = true;
             this.loading = false;
@@ -79,7 +63,6 @@ export class Song {
         this.stream.on("error", (e: Error) => {
             console.log(e);
         });
-        
     }
 }
 
@@ -384,13 +367,9 @@ export function commandPlay(msg: Message, bot: Client) {
         if(userVoiceChannel.joinable) {
             userVoiceChannel.join()
                 .then((connection: VoiceConnection) => {
-<<<<<<< HEAD
-                    let song: Song = new Song(videoDesc, (song) => {
-=======
                     console.log('joined vc')
                     new Song(videoDesc, (song) => {
                         console.log('loaded song')
->>>>>>> 2387011d3fd40e952775287469f4bd7e09001f8d
                         addToQueue(song, msg);
                     });
                 })

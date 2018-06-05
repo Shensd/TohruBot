@@ -1,4 +1,5 @@
 import * as Discord from 'discord.js'
+import * as mysql from 'mysql';
 
 const auth        = require('../res/auth/auth.json');
 const conf        = require('../config/config.json');
@@ -12,6 +13,16 @@ import {Client, Message}  from 'discord.js'
 import { Utils } from './utils';
 
 const bot: Client = new Discord.Client();
+
+const USER: string = process.env.MYSQL_USER!;
+const PASS: string = process.env.MYSQL_PASS!;
+
+let connection: mysql.Connection = mysql.createConnection({
+    host: 'localhost',
+    user: USER,
+    password: PASS,
+    database: 'tohrubot'
+});
 
 interface IMode {
     name: string;
@@ -143,6 +154,33 @@ bot.on('debug', (info) => {
     if(modes.debug.activated) {
         console.log(info);
     }
+});
+
+bot.on('guildCreate', (guild: Discord.Guild) => {
+    connection.query(
+        "SELECT * FROM guilds WHERE id = ?", 
+        [
+            guild.id
+        ],
+        (error, results, fields) => {
+
+        if(error) throw error;
+
+        if(results.length == 0) {
+            connection.query(
+                "INSERT INTO guilds(id, prefix) VALUES (?, ?)",
+                [
+                    guild.id,
+                    "$"
+                ],
+                (error, results, fields) => {
+                    if(error) throw error;
+
+                    console.log(`Added guild "${guild.name}" (${guild.id}) to database.`);
+            });
+        }
+
+    });
 });
 
 bot.login(auth["token"]);

@@ -4,12 +4,14 @@
   "description": "Main package",
   "main": "lib/bot.js",
   "dependencies": {
+    "@types/mysql": "^2.15.5",
     "bufferutil": "^3.0.5",
     "discord.js": "^11.3.2",
     "erlpack": "^0.1.2",
     "ffmpeg-binaries": "^3.2.2-3",
     "graceful-fs": "^4.1.11",
     "libsodium-wrappers": "^0.7.3",
+    "mysql": "^2.15.0",
     "node-opus": "^0.3.0",
     "opusscript": "^0.0.6",
     "sodium": "^2.0.3",
@@ -26,6 +28,7 @@
   "scripts": {
     "test": "node bot.js --debug",
     "start": "nodemon bot.js",
+    "single-start": "tsc && node dist/bot.js",
     "build": "flow-remove-types src/ -d lib"
   },
   "repository": {
