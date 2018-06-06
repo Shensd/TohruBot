@@ -1,6 +1,6 @@
 # Tohru Bot
 
-![Banner](./banner.png)
+![Banner](./res/img/banner.png)
 
 Another Discord Music Bot
 

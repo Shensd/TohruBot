@@ -2,7 +2,8 @@ import * as Discord from 'discord.js';
 
 import {Client, Message} from 'discord.js';
 
-import {commands, ICommandParams} from './../commands';
+import { ICommandParams } from '../misc/globals';
+import { commands } from './../commands';
 import { Utils } from './../utils';
 
 interface IMode {
@@ -37,7 +38,9 @@ export default function onMessage(bot: Client, msg: Message, modes: {[key: strin
         const params: ICommandParams  = {
             bot: bot,
             msg: msg,
-            args: args
+            user: msg.author,
+            args: args,
+            content: args.join(" ")
         }
         
         return void commands[cmd].process(params);

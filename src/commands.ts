@@ -14,6 +14,7 @@ import * as youtubedl from 'youtube-dl'
 import { Message, Client, OAuth2Application } from 'discord.js';
 //const youtubedl = require("youtube-dl");
 
+import { ICommandParams } from './misc/globals';
 import {commandClear as clear,
         commandPlay as play,
         commandSkip as skip,
@@ -22,15 +23,9 @@ import {commandClear as clear,
         commandQueue as queue,
         commandVoteSkip as voteskip } from './music'
 import { Utils } from './utils';
-
+ 
 function img_reply(msg: Message, img: string) {
     msg.reply("", {files:[root_img + pics[img]]});
-}
-
-export interface ICommandParams {
-    msg: Message;
-    bot: Client;
-    args: string[];
 }
 
 // defining the structure of our commands
