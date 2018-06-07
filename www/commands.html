@@ -35,91 +35,93 @@
         <!-- end navbar -->
 
         <div class="container bg-white rounded mu-3">
-            <div class="row align-items-center">
-                <div class="col">
+            <div class="row align-items-center jumbo-container mini-reverse">
+                <div class="col-6">
                     <h1>Commands</h1>
                     <h5>
                         The most important feature of any bot: <em>commands!</em><br> 
                         Tohru bot features many commands, and they have all been listed here for your reading pleasure!
                     </h5>
                 </div>
-                <div class="col">
-                    <img src="./res/img/tohru-fist.png" class="img-responsive" alt="Tohru Fist">
+                <div class="col-6">
+                    <img src="./res/img/tohru-fist.png" class="img-fluid" alt="Tohru Fist">
                 </div>
             </div>
         </div>
 
         <div class="container bg-light rounded mono">
             <h2>List of Commands</h2>
-            <table class="table table-striped">
-                <thead>
-                    <tr>
-                        <th scope="col">Name</th>
-                        <th scope="col">Parameters</th>
-                        <th scope="col">Description</th>
-                        <th scope="col">Example</th>
-                        <th scope="col">Admin</th>
-                    </tr>
-                </thead>
-                <tbody>
+            <div class="overflow-auto">
+                <table class="table table-striped">
+                    <thead>
                         <tr>
-                            <th scope="row">echo</th>
-                            <td>[Content to be repeated]</td>
-                            <td>Echos back the given input</td>
-                            <td><code>$echo hello world!</code></td>
-                            <td>No</td>
+                            <th scope="col">Name</th>
+                            <th scope="col">Parameters</th>
+                            <th scope="col">Description</th>
+                            <th scope="col">Example</th>
+                            <th scope="col">Admin</th>
                         </tr>
-                        <tr>
-                            <th scope="row">ping</th>
-                            <td>None</td>
-                            <td>Pong!</td>
-                            <td><code>$ping</code></td>
-                            <td>No</td>
-                        </tr>
-                        <tr>
-                            <th scope="row">thonk</th>
-                            <td>None</td>
-                            <td>Hmmmm</td>
-                            <td><code>$thonk</code></td>
-                            <td>No</td>
-                        </tr>
-                        <tr>
-                            <th scope="row">play</th>
-                            <td>[youtube url or search query]</td>
-                            <td>Plays a given song in the user's voice channel</td>
-                            <td><code>$play https://www.youtube.com/watch?v=dQw4w9WgXcQ</code></td>
-                            <td>No</td>
-                        </tr>
-                        <tr>
-                            <th scope="row">skip</th>
-                            <td>None</td>
-                            <td>Skips the currently playing song</td>
-                            <td><code>$skip</code></td>
-                            <td>Yes</td>
-                        </tr>
-                        <tr>
-                            <th scope="row">queue</th>
-                            <td>None</td>
-                            <td>Lists the currently queued songs</td>
-                            <td><code>$queue</code></td>
-                            <td>No</td>
-                        </tr>
-                        <tr>
-                            <th scope="row">clear</th>
-                            <td>None</td>
-                            <td>Clears the queue of songs</td>
-                            <td><code>$clear</code></td>
-                            <td>Yes</td>
-                        </tr>
-                        <tr>
-                            <th scope="row">link</th>
-                            <td>None</td>
-                            <td>Gives a link and description of currently playing song</td>
-                            <td><code>$link</code></td>
-                            <td>No</td>
-                        </tr>
-                </tbody>
-            </table>
+                    </thead>
+                    <tbody>
+                            <tr>
+                                <th scope="row">echo</th>
+                                <td>[Content to be repeated]</td>
+                                <td>Echos back the given input</td>
+                                <td><code>$echo hello world!</code></td>
+                                <td>No</td>
+                            </tr>
+                            <tr>
+                                <th scope="row">ping</th>
+                                <td>None</td>
+                                <td>Pong!</td>
+                                <td><code>$ping</code></td>
+                                <td>No</td>
+                            </tr>
+                            <tr>
+                                <th scope="row">thonk</th>
+                                <td>None</td>
+                                <td>Hmmmm</td>
+                                <td><code>$thonk</code></td>
+                                <td>No</td>
+                            </tr>
+                            <tr>
+                                <th scope="row">play</th>
+                                <td>[youtube url or search query]</td>
+                                <td>Plays a given song in the user's voice channel</td>
+                                <td><code>$play https://www.youtube.com/watch?v=dQw4w9WgXcQ</code></td>
+                                <td>No</td>
+                            </tr>
+                            <tr>
+                                <th scope="row">skip</th>
+                                <td>None</td>
+                                <td>Skips the currently playing song</td>
+                                <td><code>$skip</code></td>
+                                <td>Yes</td>
+                            </tr>
+                            <tr>
+                                <th scope="row">queue</th>
+                                <td>None</td>
+                                <td>Lists the currently queued songs</td>
+                                <td><code>$queue</code></td>
+                                <td>No</td>
+                            </tr>
+                            <tr>
+                                <th scope="row">clear</th>
+                                <td>None</td>
+                                <td>Clears the queue of songs</td>
+                                <td><code>$clear</code></td>
+                                <td>Yes</td>
+                            </tr>
+                            <tr>
+                                <th scope="row">link</th>
+                                <td>None</td>
+                                <td>Gives a link and description of currently playing song</td>
+                                <td><code>$link</code></td>
+                                <td>No</td>
+                            </tr>
+                    </tbody>
+                </table>
+            </div>
         </div>
 
         <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>

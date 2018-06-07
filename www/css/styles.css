@@ -24,6 +24,10 @@ a:hover{
     font-family: 'Roboto Mono', monospace;   
 }
 
+.overflow-auto {
+    overflow: auto;
+}
+
 @media(min-width: 781px) {
     .jumbo-container {
         flex-direction: row;
@@ -33,6 +37,9 @@ a:hover{
 @media(max-width: 780px) {
     .jumbo-container {
         flex-direction: column;
+    }
+    .mini-reverse {
+        flex-direction: column-reverse;
     }
 }
 
