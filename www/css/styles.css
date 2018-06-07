@@ -2,3 +2,49 @@ body, html, * {
     margin: 0; 
     padding: 0;
 }
+
+body {
+    font-family: 'Caveat Brush', cursive;
+}
+
+.button-drop-shadow {
+    padding: 10px;
+    box-shadow: 5px 10px 18px #825000;
+}
+
+a:hover{
+    text-decoration: none;
+}
+
+.jumbo-container {
+    display: flex;
+}
+
+.mono {
+    font-family: 'Roboto Mono', monospace;   
+}
+
+@media(min-width: 781px) {
+    .jumbo-container {
+        flex-direction: row;
+    }
+}
+
+@media(max-width: 780px) {
+    .jumbo-container {
+        flex-direction: column;
+    }
+}
+
+@media(min-width: 771px) {
+    .button-box {
+        display: inherit;
+    }
+}
+
+@media(max-width: 770px) {
+    .button-box {
+        display: flex;
+        flex-direction: column;
+    }
+}

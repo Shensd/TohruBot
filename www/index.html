@@ -6,15 +6,17 @@
 
         <title>Tohru Bot</title>
 
+        <link href="https://fonts.googleapis.com/css?family=Caveat+Brush" rel="stylesheet">
+
         <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/css/bootstrap.min.css" integrity="sha384-PsH8R72JQ3SOdhVi3uxftmaW6Vc51MKb0q5P2rRUpPvrszuE4W1povHYgTpBfshb" crossorigin="anonymous">
 
-        <link rel="stylesheet" type="test/css" href="./css/styles.css"/>
+        <link rel="stylesheet" type="text/css" href="./css/styles.css"/>
         <script src="./script/script.js"></script>
     </head>
     <body>
 
         <!-- begin navbar -->
-        <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <nav class="navbar navbar-expand-lg navbar-dark" style="background-color: #ff9d00">
             <a class="navbar-brand" href="index.html">Tohru Bot</a>
             <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navCollapse" aria-controls="navCollapse" aria-expanded="false" aria-label="Toggle Navigation">
                 <span class="navbar-toggler-icon"></span>
@@ -23,46 +25,93 @@
             <div class="collapse navbar-collapse" id="navCollapse">
                 <div class="navbar-nav">
                     <a class="nav-item nav-link active" href="index.html">Home</a>
-                    <a class="nav-item nav-link" href="features.html">Features</a>
                     <a class="nav-item nav-link" href="commands.html">Commands</a>
-                    <a class="nav-item nav-link" href="https://discordapp.com/oauth2/authorize?client_id=435265673153871872&permissions=36703232&scope=bot">Invite</a>
-                    <a class="nav-item nav-link" href="#">Discord</a>
+                    <a class="nav-item nav-link" target="_blank" href="https://discordapp.com/oauth2/authorize?client_id=435265673153871872&permissions=36703232&scope=bot">Invite</a>
+                    <a class="nav-item nav-link" target="_blank" href="https://discord.gg/emzaxH6">Discord</a>
                 </div>
             </div>
         </nav>
         <!-- end navbar -->
 
-        <!-- image banner -->
-        <div class="text-center rounded m-4">
-            <img src="./res/img/banner.png" class="img-fluid" alt="Banner"/>
-        </div>
-
-        <!-- quick access buttons -->
-        <div class="text-center container">
-            <div class="row justify-content-md-center">
-                <div class="col">
-                    <a href="https://discordapp.com/oauth2/authorize?client_id=435265673153871872&permissions=36703232&scope=bot">
-                        <div class="rounded bg-primary text-light p-2 my-3">
-                            <h3>Add to Server</h3>
+        <div style="background-color: #ff9d00">
+            <!-- quick access buttons -->
+            <div class="text-center container">
+                <div class="row align-items-center jumbo-container">
+                    <div class="col-6">
+                        <div class="text-center rounded">
+                            <img src="./res/img/tohru-shrug.png" class="img-fluid" alt="Banner"/>
                         </div>
-                    </a>
-                </div>
-                <div class="col">
-                    <a href="features.html">
-                        <div class="rounded bg-primary text-light p-2 my-3">
-                            <h3>Learn More</h3>
+                    </div>
+                    <div class="col-6">
+                        <div class="row">
+                            <div class="col">
+                                <h1 class="display-3 text-white">Tohru Bot</h1>
+                                <h3 class="text-white">
+                                    The Only<sup>tm</sup> Discord Bot
+                                </h3>
+                            </div>
                         </div>
-                    </a>
+                        <div class="col">
+                            <a  target="_blank" href="https://discordapp.com/oauth2/authorize?client_id=435265673153871872&permissions=36703232&scope=bot">
+                                <div class="rounded text-light p-2 my-3 button-drop-shadow" style="background-color:#f44242">
+                                    <h4>Add to Server</h4>
+                                </div>
+                            </a>
+                        </div>
+                        <div class="col">
+                            <a href="commands.html">
+                                <div class="rounded text-light p-2 my-3 button-drop-shadow" style="background-color:#f44242">
+                                    <h4>Commands</h4>
+                                </div>
+                            </a>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <!-- about -->
-        <div class="container bg-light rounded p-3">
-            <h1>What is Tohru Bot?</h1>
-            <p>
-                Lorem ipsum dolor sit amet, consectetur adipiscing elit. Proin rutrum aliquet laoreet. Vivamus sed odio fermentum, cursus dolor ut, scelerisque metus. Pellentesque a faucibus metus, sit amet faucibus lectus. Aliquam tristique, tortor ut cursus fermentum, est est bibendum libero, et laoreet neque purus id justo. Phasellus fringilla ligula et elit aliquet, non lobortis erat scelerisque. Maecenas dapibus tortor eu pellentesque faucibus. Aenean vitae libero sed tellus mattis rhoncus. Phasellus luctus lacinia lacus eu venenatis. Maecenas vitae ultricies lorem. Aenean pretium hendrerit purus, quis finibus lacus. Etiam sed dapibus dui. Nam efficitur ex in purus pellentesque tempor.
-            </p>
+
+        <div class="container bg-white rounded p-3 mt-4">
+            <h1 class="display-3 text-center">Features</h1>
+        </div>
+        <div class="container bg-white rounded p-3">
+            <div class="row align-items-center">
+                <div class="col-lg">
+                    <h1>Music</h1>
+                    <p>
+                        Lorem ipsum dolor sit amet, consectetur adipiscing elit. Ut id ipsum ut libero porta fringilla et sed orci. Nullam vel nunc egestas purus pretium lacinia sit amet sit amet ligula. Aliquam sed nibh eros. Suspendisse luctus ac tortor id facilisis. Aenean aliquam massa nec tincidunt fermentum. Nunc placerat ullamcorper nulla at auctor. Sed elementum lorem non sollicitudin pretium. Suspendisse laoreet nisl nulla, non placerat velit molestie quis.
+                    </p>
+                </div>
+                <div class="col-sm">
+                    <img src="./res/img/tohru-dance.gif" class="img-thumbnail" alt="Tohru Dance">
+                </div>
+            </div>
+        </div>
+        <div class="container bg-white rounded p-3">
+            <div class="row align-items-center">
+                <div class="col">
+                        <img src="./res/img/tohru-point.png" style="height: 400px" alt="Excited Tohru">
+                </div>
+                <div class="col">
+                    <h1>Fun</h1>
+                    <p>
+                        Lorem ipsum dolor sit amet, consectetur adipiscing elit. Ut ac urna sodales, iaculis ipsum vitae, lobortis libero. Praesent ac magna quis nisi laoreet ullamcorper id et magna. Donec faucibus, ipsum et suscipit congue, ipsum arcu finibus odio, vel facilisis neque turpis at ipsum. Maecenas eleifend a odio vestibulum mollis. Fusce nec augue lorem. Curabitur ornare libero in libero dignissim, in convallis lacus interdum. Aliquam fringilla lacus vestibulum, placerat nulla ut, tempus felis. Donec nec vulputate lectus, at mollis arcu. In odio leo, scelerisque non vehicula eu, egestas et arcu. Sed suscipit faucibus nunc, in efficitur lectus porttitor cursus. Suspendisse tincidunt quam ac vulputate fringilla.
+                    </p>
+                </div>
+            </div>
+        </div>
+        <div class="container bg-white rounded pt-3 mb-3">
+            <div class="row align-items-center">
+                <div class="col">
+                    <h1>Utility</h1>
+                    <p>
+                        Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec id augue orci. Aliquam hendrerit enim quis nisi euismod laoreet et in tellus. Sed et neque ut velit malesuada efficitur ac ut massa. Proin sollicitudin in dolor in condimentum. Vestibulum imperdiet tellus et tellus tincidunt, ac iaculis libero auctor. Morbi sed arcu eros. Sed leo augue, volutpat ut nunc eu, egestas pharetra nulla.
+                    </p>
+                </div>
+                <div class="col">
+                        <img src="./res/img/tohru-excited.png" alt="Excited Tohru">
+                </div>
+            </div>
         </div>
 
         <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
