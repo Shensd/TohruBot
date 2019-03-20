@@ -5,6 +5,7 @@ body, html, * {
 
 body {
     font-family: 'Caveat Brush', cursive;
+    overflow-x: hidden;
 }
 
 .button-drop-shadow {
@@ -28,9 +29,43 @@ a:hover{
     overflow: auto;
 }
 
+.img-container {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    max-width: 400px;
+}
+
+.img-container > img {
+    max-width: 400px;
+    max-height: 400px;
+}
+
+.img-tohru-display {
+    max-width: 400px;
+    max-height: 400px;
+}
+
+.pop-box {
+    box-shadow: 10px 5px 5px lightgray;
+    border: 1px solid black;
+}
+
+footer {
+    background-color: #ff9d00;
+}
+
 @media(min-width: 781px) {
     .jumbo-container {
         flex-direction: row;
+    }
+    .pop-box {
+        box-shadow: 10px 5px 5px lightgray;
+        border: 1px solid black;
+    }
+    .img-container > img {
+        max-width: 400px;
+        max-height: 400px;
     }
 }
 
@@ -38,7 +73,19 @@ a:hover{
     .jumbo-container {
         flex-direction: column;
     }
+    .pop-box {
+        box-shadow: none;
+        border: none;
+        border-bottom: 2px solid black;
+    }
+    .img-container > img {
+        max-width: 80vw;
+    }
+}
+
+@media(max-width: 570px) {
     .mini-reverse {
+        display: flex;
         flex-direction: column-reverse;
     }
 }

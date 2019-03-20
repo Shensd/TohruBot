@@ -1,3 +1,5 @@
+
+
 import * as Discord from 'discord.js'
 import * as mysql from 'mysql';
 
