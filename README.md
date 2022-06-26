@@ -6,8 +6,6 @@ Another Discord Music Bot
 
 Tohru bot is the only™ Discord bot (not really) that plays music from Youtube, either through given links or search queries.
 
-Tohru now has a website! Check it out at [www.tohru.fun](http://www.tohru.fun/)!
-
 ## How do I add it?
 
 Tohru is not yet ready to be added to servers, but this repository can be pulled and ran locally, simply rename `/res/auth/example_auth.json` to `/res/auth/auth.json` and replace the given entry with your bot token.
